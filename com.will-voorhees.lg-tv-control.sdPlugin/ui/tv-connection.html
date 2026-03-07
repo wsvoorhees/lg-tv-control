@@ -8,21 +8,7 @@
 </head>
 
 <body>
-    <sdpi-item label="TV IP Address">
-        <input id="ip-input" type="text" placeholder="192.168.1.x">
-    </sdpi-item>
-
-    <sdpi-item label="Scan">
-        <button id="scan-btn" class="pi-btn">Scan for TVs</button>
-    </sdpi-item>
-
-    <sdpi-item label="Found TVs" id="tv-list-item" style="display: none">
-        <sdpi-select id="tv-select">
-            <option value="">Select a TV...</option>
-        </sdpi-select>
-    </sdpi-item>
-
-    <p id="scan-status" class="pi-status"></p>
+    <div id="tv-selector-root"></div>
 
     <script src="tv-selector.js"></script>
 </body>

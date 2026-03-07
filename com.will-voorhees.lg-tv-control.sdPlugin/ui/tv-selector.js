@@ -9,6 +9,25 @@
  *   #scan-status    - p.pi-status for scan status text
  */
 
+// Inject TV selector HTML into the placeholder div
+const tvSelectorRoot = document.getElementById('tv-selector-root');
+if (tvSelectorRoot) {
+    tvSelectorRoot.innerHTML = `
+        <sdpi-item label="TV IP Address">
+            <input id="ip-input" type="text" placeholder="192.168.1.x">
+        </sdpi-item>
+        <sdpi-item label="Scan">
+            <button id="scan-btn" class="pi-btn">Scan for TVs</button>
+            <p id="scan-status" class="pi-status"></p>
+        </sdpi-item>
+        <sdpi-item label="Found TVs" id="tv-list-item">
+            <sdpi-select id="tv-select">
+                <option value="">Select a TV...</option>
+            </sdpi-select>
+        </sdpi-item>
+    `;
+}
+
 // Inject shared button/input styles
 const style = document.createElement('style');
 style.textContent = `
@@ -77,7 +96,6 @@ function initTvSelector() {
     scanBtn.addEventListener('click', () => {
         scanBtn.textContent = 'Scanning...';
         scanBtn.disabled = true;
-        document.getElementById('tv-list-item').style.display = 'none';
         document.getElementById('scan-status').textContent = '';
         sd.send('sendToPlugin', { event: 'scanForTVs' });
 
@@ -99,7 +117,6 @@ function initTvSelector() {
         if (payload.event !== 'tvScanResults') return;
 
         const select = document.getElementById('tv-select');
-        const listItem = document.getElementById('tv-list-item');
         const status = document.getElementById('scan-status');
 
         resetScanBtn();
@@ -114,7 +131,6 @@ function initTvSelector() {
                 option.textContent = tv.name ? `${tv.name} (${tv.ip})` : tv.ip;
                 select.appendChild(option);
             });
-            listItem.style.display = '';
             status.textContent = `Found ${payload.tvs.length} TV(s).`;
         }
     });
