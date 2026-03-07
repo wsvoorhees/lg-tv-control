@@ -2,14 +2,14 @@
  * Shared TV IP selector logic.
  *
  * Expects the following elements in the host HTML:
- *   #ip-input       - sdpi-textfield bound to tvIpAddress
+ *   #ip-input       - plain <input type="text"> for the TV IP address (global setting)
  *   #scan-btn       - <button> that triggers a network scan
  *   #tv-list-item   - sdpi-item wrapping the scan results dropdown (hidden by default)
  *   #tv-select      - sdpi-select populated with discovered TVs
  *   #scan-status    - p.pi-status for scan status text
  */
 
-// Inject shared button styles
+// Inject shared button/input styles
 const style = document.createElement('style');
 style.textContent = `
     .pi-btn {
@@ -34,13 +34,35 @@ style.textContent = `
         opacity: 0.7;
         min-height: 14px;
     }
+    #ip-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 4px 6px;
+        background: var(--sdpi-background, #2d2d2d);
+        color: var(--sdpi-color, #d8d8d8);
+        border: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
+        border-radius: 3px;
+        font-size: 12px;
+    }
 `;
 document.head.appendChild(style);
 
 function initTvSelector() {
+    const ipInput = document.getElementById('ip-input');
     const scanBtn = document.getElementById('scan-btn');
 
     let scanTimeout = null;
+
+    // Load saved global IP address into the input field.
+    $SD.onDidReceiveGlobalSettings(({ settings }) => {
+        if (settings.tvIpAddress) ipInput.value = settings.tvIpAddress;
+    });
+    $SD.getGlobalSettings();
+
+    // Save the IP address to global settings when the user edits it.
+    ipInput.addEventListener('change', () => {
+        $SD.setGlobalSettings({ tvIpAddress: ipInput.value.trim() });
+    });
 
     function resetScanBtn() {
         scanBtn.textContent = 'Scan for TVs';
@@ -67,11 +89,8 @@ function initTvSelector() {
     document.getElementById('tv-select').addEventListener('change', (e) => {
         const ip = e.target.value;
         if (ip) {
-            // Update the sdpi-textfield's inner input through its shadow DOM
-            const ipInput = document.getElementById('ip-input');
-            const innerInput = ipInput.shadowRoot?.querySelector('input');
-            if (innerInput) innerInput.value = ip;
-            $SD.setSettings({ tvIpAddress: ip });
+            ipInput.value = ip;
+            $SD.setGlobalSettings({ tvIpAddress: ip });
         }
     });
 

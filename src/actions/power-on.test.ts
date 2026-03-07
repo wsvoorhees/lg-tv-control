@@ -5,13 +5,11 @@ let stateChangeListener: ((state: ConnectionState) => void) | null = null;
 
 const mockTvClient = {
     state: "disconnected" as ConnectionState,
-    connect: vi.fn(),
-    request: vi.fn(),
+    reconnect: vi.fn(),
     on: vi.fn((event: string, listener: (state: ConnectionState) => void) => {
         if (event === "stateChange") stateChangeListener = listener;
     }),
     off: vi.fn(),
-    removeAllListeners: vi.fn(),
 };
 
 vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
@@ -27,12 +25,8 @@ function makeMockAction() {
     return { setTitle: vi.fn() };
 }
 
-function makeWillAppearEvent(settings: { tvIpAddress?: string } = {}) {
-    return { payload: { settings }, action: makeMockAction() };
-}
-
-function makeKeyDownEvent(settings: { tvIpAddress?: string } = {}) {
-    return { payload: { settings }, action: makeMockAction() };
+function makeWillAppearEvent() {
+    return { action: makeMockAction() };
 }
 
 describe("PowerOn", () => {
@@ -46,55 +40,45 @@ describe("PowerOn", () => {
     });
 
     describe("onWillAppear", () => {
-        it("connects to the TV when an IP is configured", () => {
-            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1" }) as never);
-            expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
-        });
-
-        it("does not connect when no IP is configured", () => {
-            action.onWillAppear(makeWillAppearEvent() as never);
-            expect(mockTvClient.connect).not.toHaveBeenCalled();
-        });
-
         it("sets title to 'Off' when disconnected", () => {
             mockTvClient.state = "disconnected";
-            const ev = makeWillAppearEvent({ tvIpAddress: "192.168.1.1" });
+            const ev = makeWillAppearEvent();
             action.onWillAppear(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("Off");
         });
 
         it("sets title to '...' when connecting", () => {
             mockTvClient.state = "connecting";
-            const ev = makeWillAppearEvent({ tvIpAddress: "192.168.1.1" });
+            const ev = makeWillAppearEvent();
             action.onWillAppear(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("...");
         });
 
         it("sets title to 'On' when connected", () => {
             mockTvClient.state = "connected";
-            const ev = makeWillAppearEvent({ tvIpAddress: "192.168.1.1" });
+            const ev = makeWillAppearEvent();
             action.onWillAppear(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("On");
         });
 
         it("updates title when state changes after appearing", () => {
-            const ev = makeWillAppearEvent({ tvIpAddress: "192.168.1.1" });
+            const ev = makeWillAppearEvent();
             action.onWillAppear(ev as never);
             stateChangeListener!("connected");
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
         });
 
         it("replaces old listener when onWillAppear is called again", () => {
-            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1" }) as never);
+            action.onWillAppear(makeWillAppearEvent() as never);
             const firstListener = stateChangeListener;
-            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1" }) as never);
+            action.onWillAppear(makeWillAppearEvent() as never);
             expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", firstListener);
         });
     });
 
     describe("onWillDisappear", () => {
         it("removes only its own stateChange listener", () => {
-            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1" }) as never);
+            action.onWillAppear(makeWillAppearEvent() as never);
             const listener = stateChangeListener;
             action.onWillDisappear({} as never);
             expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", listener);
@@ -107,20 +91,9 @@ describe("PowerOn", () => {
     });
 
     describe("onKeyDown", () => {
-        it("shows 'No IP' when no IP is configured", () => {
-            const ev = makeKeyDownEvent();
-            action.onKeyDown(ev as never);
-            expect(ev.action.setTitle).toHaveBeenCalledWith("No IP");
-        });
-
-        it("does not connect when no IP is configured", () => {
-            action.onKeyDown(makeKeyDownEvent() as never);
-            expect(mockTvClient.connect).not.toHaveBeenCalled();
-        });
-
-        it("connects to the TV when an IP is configured", () => {
-            action.onKeyDown(makeKeyDownEvent({ tvIpAddress: "192.168.1.1" }) as never);
-            expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
+        it("calls reconnect", () => {
+            action.onKeyDown({} as never);
+            expect(mockTvClient.reconnect).toHaveBeenCalled();
         });
     });
 });

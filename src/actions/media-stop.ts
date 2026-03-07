@@ -1,25 +1,9 @@
-import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
 import { tvClient } from "../tv-client";
 
-type MediaStopSettings = {
-    tvIpAddress?: string;
-};
-
 @action({ UUID: "com.will-voorhees.lg-tv-control.media-stop" })
-export class MediaStop extends SingletonAction<MediaStopSettings> {
-    override onWillAppear(ev: WillAppearEvent<MediaStopSettings>): void {
-        const { tvIpAddress } = ev.payload.settings;
-        if (tvIpAddress) {
-            tvClient.connect(tvIpAddress);
-        }
-    }
-
-    override async onKeyDown(ev: KeyDownEvent<MediaStopSettings>): Promise<void> {
-        const { tvIpAddress } = ev.payload.settings;
-        if (!tvIpAddress) {
-            ev.action.setTitle("No IP");
-            return;
-        }
+export class MediaStop extends SingletonAction {
+    override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
         if (tvClient.state !== "connected") return;
         try { await tvClient.request("ssap://media.controls/stop"); } catch { /* ignore */ }
     }

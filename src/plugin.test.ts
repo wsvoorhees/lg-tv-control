@@ -13,7 +13,11 @@ vi.mock("@elgato/streamdeck", () => ({
             onSendToPlugin: vi.fn((handler) => { sendToPluginHandler = handler; }),
             sendToPropertyInspector: mockSendToPropertyInspector,
         },
-        connect: vi.fn(),
+        connect: vi.fn().mockResolvedValue(undefined),
+        settings: {
+            onDidReceiveGlobalSettings: vi.fn(),
+            getGlobalSettings: vi.fn(),
+        },
     },
     action: () => (cls: unknown) => cls,
     SingletonAction: class {},
@@ -21,10 +25,7 @@ vi.mock("@elgato/streamdeck", () => ({
 
 const mockTvClient = {
     state: "connected",
-    connect: vi.fn(),
     request: vi.fn(),
-    on: vi.fn(),
-    removeAllListeners: vi.fn(),
 };
 
 vi.mock("./tv-client.js", () => ({ tvClient: mockTvClient }));

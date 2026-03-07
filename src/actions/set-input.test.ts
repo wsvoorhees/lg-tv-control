@@ -3,10 +3,7 @@ import type { ConnectionState } from "../tv-client.js";
 
 const mockTvClient = {
     state: "disconnected" as ConnectionState,
-    connect: vi.fn(),
     request: vi.fn(),
-    on: vi.fn(),
-    removeAllListeners: vi.fn(),
 };
 
 vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
@@ -22,7 +19,7 @@ function makeMockAction() {
     return { setTitle: vi.fn() };
 }
 
-type SetInputSettings = { tvIpAddress?: string; inputId?: string; inputLabel?: string };
+type SetInputSettings = { inputId?: string; inputLabel?: string };
 
 function makeWillAppearEvent(settings: SetInputSettings = {}) {
     return { payload: { settings }, action: makeMockAction() };
@@ -42,16 +39,6 @@ describe("SetInput", () => {
     });
 
     describe("onWillAppear", () => {
-        it("connects to the TV when an IP is configured", () => {
-            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" }) as never);
-            expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
-        });
-
-        it("does not connect when no IP is configured", () => {
-            action.onWillAppear(makeWillAppearEvent({ inputId: "HDMI_1" }) as never);
-            expect(mockTvClient.connect).not.toHaveBeenCalled();
-        });
-
         it("shows inputLabel as the title when set", () => {
             const ev = makeWillAppearEvent({ inputId: "HDMI_1", inputLabel: "PlayStation" });
             action.onWillAppear(ev as never);
@@ -71,25 +58,38 @@ describe("SetInput", () => {
         });
     });
 
+    describe("onDidReceiveSettings", () => {
+        it("shows inputLabel as the title when set", () => {
+            const ev = makeWillAppearEvent({ inputId: "HDMI_1", inputLabel: "PlayStation" });
+            action.onDidReceiveSettings(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("PlayStation");
+        });
+
+        it("falls back to inputId when no inputLabel", () => {
+            const ev = makeWillAppearEvent({ inputId: "HDMI_1" });
+            action.onDidReceiveSettings(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("HDMI_1");
+        });
+
+        it("falls back to 'Input' when neither inputLabel nor inputId are set", () => {
+            const ev = makeWillAppearEvent();
+            action.onDidReceiveSettings(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("Input");
+        });
+    });
+
     describe("onKeyDown", () => {
         it("shows 'No input' when no inputId is configured", async () => {
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1" });
+            const ev = makeKeyDownEvent();
             await action.onKeyDown(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("No input");
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
 
-        it("connects to TV before switching input if not already connecting", async () => {
-            mockTvClient.state = "disconnected";
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
-            await action.onKeyDown(ev as never);
-            expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
-        });
-
-        it("shows '...' when not connected after attempting connect", async () => {
+        it("shows '...' when not connected", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "disconnected";
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("...");
             expect(mockTvClient.request).not.toHaveBeenCalled();
@@ -99,7 +99,7 @@ describe("SetInput", () => {
         it("restores the input label after 2 seconds when not connected", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "disconnected";
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1", inputLabel: "PlayStation" });
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1", inputLabel: "PlayStation" });
             await action.onKeyDown(ev as never);
             vi.advanceTimersByTime(2000);
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("PlayStation");
@@ -109,7 +109,7 @@ describe("SetInput", () => {
         it("restores the inputId when no inputLabel after 2 seconds", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "disconnected";
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
             vi.advanceTimersByTime(2000);
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("HDMI_1");
@@ -119,7 +119,7 @@ describe("SetInput", () => {
         it("sends switchInput request when connected", async () => {
             mockTvClient.state = "connected";
             mockTvClient.request.mockResolvedValue(undefined);
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
             expect(mockTvClient.request).toHaveBeenCalledWith("ssap://tv/switchInput", { inputId: "HDMI_1" });
         });
@@ -127,7 +127,7 @@ describe("SetInput", () => {
         it("passes the correct inputId in the request payload", async () => {
             mockTvClient.state = "connected";
             mockTvClient.request.mockResolvedValue(undefined);
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_2" });
+            const ev = makeKeyDownEvent({ inputId: "HDMI_2" });
             await action.onKeyDown(ev as never);
             expect(mockTvClient.request).toHaveBeenCalledWith("ssap://tv/switchInput", { inputId: "HDMI_2" });
         });
@@ -136,7 +136,7 @@ describe("SetInput", () => {
             vi.useFakeTimers();
             mockTvClient.state = "connected";
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1", inputLabel: "PlayStation" });
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1", inputLabel: "PlayStation" });
             await action.onKeyDown(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("!");
             vi.advanceTimersByTime(2000);
@@ -148,7 +148,7 @@ describe("SetInput", () => {
             vi.useFakeTimers();
             mockTvClient.state = "connected";
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
-            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("!");
             vi.advanceTimersByTime(2000);

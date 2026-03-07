@@ -17,6 +17,7 @@
         "@types/node": "~20.15.0",
         "@types/node-ssdp": "^4.0.5",
         "rollup": "^4.0.2",
+        "ts-node": "^10.9.2",
         "tslib": "^2.6.2",
         "typescript": "^5.2.2",
         "vitest": "^4.0.18"

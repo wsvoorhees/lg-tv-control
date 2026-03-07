@@ -1,6 +1,9 @@
 # Node.js
 node_modules/
 
+# Contains API keys
+.mcp.json
+
 # Stream Deck files
 *.sdPlugin/bin
 *.sdPlugin/logs

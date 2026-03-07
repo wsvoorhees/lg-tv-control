@@ -16,7 +16,14 @@ import { LaunchApp } from "./actions/launch-app";
 import { tvClient } from "./tv-client";
 import { scanForTVs } from "./tv-scanner";
 
-streamDeck.logger.setLevel("trace");
+streamDeck.logger.setLevel("info");
+
+// Connect to TV when global settings change (user sets IP in property inspector).
+streamDeck.settings.onDidReceiveGlobalSettings<{ tvIpAddress?: string }>(ev => {
+    const { tvIpAddress } = ev.settings;
+    if (tvIpAddress) tvClient.connect(tvIpAddress);
+    else tvClient.disconnect();
+});
 
 // Register actions.
 streamDeck.actions.registerAction(new PowerOn());
@@ -67,5 +74,5 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
     }
 });
 
-// Finally, connect to the Stream Deck.
-streamDeck.connect();
+// Finally, connect to the Stream Deck and fetch initial global settings.
+streamDeck.connect().then(() => streamDeck.settings.getGlobalSettings());

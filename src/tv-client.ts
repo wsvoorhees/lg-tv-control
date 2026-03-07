@@ -66,6 +66,10 @@ export class TvClient extends EventEmitter {
         });
     }
 
+    reconnect(): void {
+        if (this._ip) this.connect(this._ip);
+    }
+
     private _setState(state: ConnectionState): void {
         if (this._state === state) return;
         this._state = state;

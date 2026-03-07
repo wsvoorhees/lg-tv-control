@@ -1,8 +1,7 @@
-import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import { action, DidReceiveSettingsEvent, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
 import { tvClient } from "../tv-client";
 
 type LaunchAppSettings = {
-    tvIpAddress?: string;
     appId?: string;
     appLabel?: string;
 };
@@ -10,23 +9,21 @@ type LaunchAppSettings = {
 @action({ UUID: "com.will-voorhees.lg-tv-control.launch-app" })
 export class LaunchApp extends SingletonAction<LaunchAppSettings> {
     override onWillAppear(ev: WillAppearEvent<LaunchAppSettings>): void {
-        const { tvIpAddress, appLabel, appId } = ev.payload.settings;
-        if (tvIpAddress) {
-            tvClient.connect(tvIpAddress);
-        }
+        const { appLabel, appId } = ev.payload.settings;
+        ev.action.setTitle(appLabel ?? appId ?? "App");
+    }
+
+    override onDidReceiveSettings(ev: DidReceiveSettingsEvent<LaunchAppSettings>): void {
+        const { appLabel, appId } = ev.payload.settings;
         ev.action.setTitle(appLabel ?? appId ?? "App");
     }
 
     override async onKeyDown(ev: KeyDownEvent<LaunchAppSettings>): Promise<void> {
-        const { tvIpAddress, appId, appLabel } = ev.payload.settings;
+        const { appId, appLabel } = ev.payload.settings;
 
         if (!appId) {
             ev.action.setTitle("No app");
             return;
-        }
-
-        if (tvIpAddress) {
-            tvClient.connect(tvIpAddress);
         }
 
         if (tvClient.state !== "connected") {

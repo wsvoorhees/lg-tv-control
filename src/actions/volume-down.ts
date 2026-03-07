@@ -1,25 +1,9 @@
-import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
 import { tvClient } from "../tv-client";
 
-type VolumeDownSettings = {
-    tvIpAddress?: string;
-};
-
 @action({ UUID: "com.will-voorhees.lg-tv-control.volume-down" })
-export class VolumeDown extends SingletonAction<VolumeDownSettings> {
-    override onWillAppear(ev: WillAppearEvent<VolumeDownSettings>): void {
-        const { tvIpAddress } = ev.payload.settings;
-        if (tvIpAddress) {
-            tvClient.connect(tvIpAddress);
-        }
-    }
-
-    override async onKeyDown(ev: KeyDownEvent<VolumeDownSettings>): Promise<void> {
-        const { tvIpAddress } = ev.payload.settings;
-        if (!tvIpAddress) {
-            ev.action.setTitle("No IP");
-            return;
-        }
+export class VolumeDown extends SingletonAction {
+    override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
         if (tvClient.state !== "connected") return;
         try { await tvClient.request("ssap://audio/volumeDown"); } catch { /* ignore */ }
     }
