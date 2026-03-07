@@ -148,6 +148,22 @@
 			]
 		},
 		{
+			"Name": "Play / Pause",
+			"UUID": "com.will-voorhees.lg-tv-control.media-play-pause",
+			"Icon": "imgs/actions/media-play-pause/icon",
+			"Tooltip": "Toggles between play and pause.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/media-play-pause/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
 			"Name": "Stop",
 			"UUID": "com.will-voorhees.lg-tv-control.media-stop",
 			"Icon": "imgs/actions/media-stop/icon",

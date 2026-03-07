@@ -75,6 +75,11 @@ const icons = {
   <rect x="12" y="12" width="17" height="48" rx="3" fill="white"/>
   <rect x="43" y="12" width="17" height="48" rx="3" fill="white"/>`),
 
+    // One vertical bar + right-pointing triangle — play/pause toggle
+    "media-play-pause": svg(`
+  <rect x="10" y="12" width="14" height="48" rx="3" fill="white"/>
+  <polygon points="30,12 30,60 62,36" fill="white"/>`),
+
     // Filled square — stop
     "media-stop": svg(`
   <rect x="12" y="12" width="48" height="48" rx="5" fill="white"/>`),
