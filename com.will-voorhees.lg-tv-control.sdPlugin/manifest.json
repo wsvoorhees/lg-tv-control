@@ -34,6 +34,38 @@
 					"TitleAlignment": "middle"
 				}
 			]
+		},
+		{
+			"Name": "Turn Off",
+			"UUID": "com.will-voorhees.lg-tv-control.turn-off",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Turns the LG TV off.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Toggle TV",
+			"UUID": "com.will-voorhees.lg-tv-control.toggle-tv",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Toggles the LG TV on or off.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
 		}
 	],
 	"Category": "LG TV Control",

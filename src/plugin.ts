@@ -2,6 +2,8 @@ import streamDeck from "@elgato/streamdeck";
 
 import { PowerOn } from "./actions/power-on";
 import { SetInput } from "./actions/set-input";
+import { TurnOff } from "./actions/turn-off";
+import { ToggleTv } from "./actions/toggle-tv";
 import { tvClient } from "./tv-client";
 import { scanForTVs } from "./tv-scanner";
 
@@ -11,6 +13,8 @@ streamDeck.logger.setLevel("trace");
 // Register actions.
 streamDeck.actions.registerAction(new PowerOn());
 streamDeck.actions.registerAction(new SetInput());
+streamDeck.actions.registerAction(new TurnOff());
+streamDeck.actions.registerAction(new ToggleTv());
 
 // Handle messages from the property inspector.
 streamDeck.ui.onSendToPlugin(async (ev) => {
