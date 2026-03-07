@@ -41,10 +41,11 @@
             sd.send('sendToPlugin', { event: 'getAppList' });
         });
 
+        let appLabelMap = {};
+
         document.getElementById('app-select').addEventListener('change', (e) => {
             const appId = e.target.value;
-            const option = e.target.selectedOptions[0];
-            const appLabel = option ? option.textContent.trim() : appId;
+            const appLabel = appLabelMap[appId] ?? appId;
             if (appId) {
                 sd.setSettings({ appId, appLabel });
             }
@@ -57,6 +58,7 @@
             const status = document.getElementById('app-status');
 
             select.innerHTML = '<option value="">Select an app...</option>';
+            appLabelMap = {};
 
             if (payload.error === 'not_connected') {
                 status.textContent = 'Not connected to TV.';
@@ -72,6 +74,7 @@
                 const option = document.createElement('option');
                 option.value = app.id;
                 option.textContent = app.label ?? app.id;
+                appLabelMap[app.id] = app.label ?? app.id;
                 select.appendChild(option);
             });
 

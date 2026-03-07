@@ -41,10 +41,11 @@
             sd.send('sendToPlugin', { event: 'getInputList' });
         });
 
+        let inputLabelMap = {};
+
         document.getElementById('input-select').addEventListener('change', (e) => {
             const inputId = e.target.value;
-            const option = e.target.selectedOptions[0];
-            const inputLabel = option ? option.textContent.trim() : inputId;
+            const inputLabel = inputLabelMap[inputId] ?? inputId;
             if (inputId) {
                 sd.setSettings({ inputId, inputLabel });
             }
@@ -57,6 +58,7 @@
             const status = document.getElementById('input-status');
 
             select.innerHTML = '<option value="">Select an input...</option>';
+            inputLabelMap = {};
 
             if (payload.error === 'not_connected') {
                 status.textContent = 'Not connected to TV.';
@@ -72,6 +74,7 @@
                 const option = document.createElement('option');
                 option.value = input.id;
                 option.textContent = input.label ?? input.id;
+                inputLabelMap[input.id] = input.label ?? input.id;
                 select.appendChild(option);
             });
 
