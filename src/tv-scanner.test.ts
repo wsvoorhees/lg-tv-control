@@ -143,6 +143,38 @@ describe("scanForTVs", () => {
         vi.useRealTimers();
     });
 
+    it("falls back to 'LG TV' when friendlyName element is blank", async () => {
+        vi.useFakeTimers();
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
+            text: () => Promise.resolve("<root><device><friendlyName>   </friendlyName></device></root>"),
+        }));
+
+        const promise = scanForTVs();
+        mockClientInstance.emit("response", { SERVER: "webOS/5.0", LOCATION: "http://192.168.1.100:1884/device.xml" }, 200, { address: "192.168.1.100" });
+        await vi.advanceTimersByTimeAsync(6000);
+        const result = await promise;
+
+        expect(result[0].name).toBe("LG TV");
+
+        vi.useRealTimers();
+    });
+
+    it("treats an empty LOCATION header as no location and skips fetch", async () => {
+        vi.useFakeTimers();
+        const fetchMock = vi.fn();
+        vi.stubGlobal("fetch", fetchMock);
+
+        const promise = scanForTVs();
+        mockClientInstance.emit("response", { SERVER: "webOS/5.0", LOCATION: "" }, 200, { address: "192.168.1.100" });
+        await vi.advanceTimersByTimeAsync(6000);
+        const result = await promise;
+
+        expect(fetchMock).not.toHaveBeenCalled();
+        expect(result[0].name).toBe("LG TV");
+
+        vi.useRealTimers();
+    });
+
     it("searches using the LG WebOS SSDP service type", async () => {
         vi.useFakeTimers();
 

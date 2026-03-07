@@ -1,20 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = vi.hoisted(() => ({
-    mockSendToPropertyInspector: vi.fn(),
-    mockTvClient: {
-        state: "connected",
-        connect: vi.fn(),
-        disconnect: vi.fn(),
-        request: vi.fn(),
-        on: vi.fn(),
-    },
-    mockScanForTVs: vi.fn(),
-    // Container for handlers captured by plugin.ts at load time
-    handlers: {
+const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = vi.hoisted(() => {
+    // Defined separately so on() can capture stateChange via closure
+    const handlers = {
         sendToPlugin: null as ((ev: { payload: unknown }) => Promise<void>) | null,
-    },
-}));
+        stateChange: null as ((state: string) => Promise<void>) | null,
+    };
+    return {
+        mockSendToPropertyInspector: vi.fn(),
+        mockTvClient: {
+            state: "connected",
+            connect: vi.fn(),
+            disconnect: vi.fn(),
+            request: vi.fn(),
+            on: vi.fn((event: string, handler: (state: string) => Promise<void>) => {
+                if (event === "stateChange") handlers.stateChange = handler;
+            }),
+        },
+        mockScanForTVs: vi.fn(),
+        handlers,
+    };
+});
 
 vi.mock("@elgato/streamdeck", () => ({
     default: {
@@ -42,6 +48,21 @@ describe("plugin", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockTvClient.state = "connected";
+    });
+
+    describe("stateChange listener", () => {
+        it("sends connectionState to the PI when TV state changes", async () => {
+            await handlers.stateChange!("connected");
+            expect(mockSendToPropertyInspector).toHaveBeenCalledWith({
+                event: "connectionState",
+                state: "connected",
+            });
+        });
+
+        it("does not throw when sendToPropertyInspector fails (PI not open)", async () => {
+            mockSendToPropertyInspector.mockRejectedValueOnce(new Error("PI not open"));
+            await expect(handlers.stateChange!("connected")).resolves.toBeUndefined();
+        });
     });
 
     describe("onSendToPlugin", () => {

@@ -114,6 +114,33 @@ describe("TvClient", () => {
             expect(client.state).toBe("connecting");
         });
 
+        it("ignores stale 'connecting' event from old lgtv2 instance after reconnect", () => {
+            const firstInstance = mockLgtvInstance;
+            client.connect("192.168.1.1");
+            firstInstance.emit("connect");
+
+            const secondInstance = makeMockLgtvInstance();
+            mockLgtv2.mockReturnValue(secondInstance);
+            client.connect("192.168.1.2");
+            secondInstance.emit("connect");
+
+            firstInstance.emit("connecting");
+            expect(client.state).toBe("connected");
+        });
+
+        it("ignores stale 'error' event from old lgtv2 instance after reconnect", () => {
+            const firstInstance = mockLgtvInstance;
+            client.connect("192.168.1.1");
+
+            const secondInstance = makeMockLgtvInstance();
+            mockLgtv2.mockReturnValue(secondInstance);
+            client.connect("192.168.1.2");
+            secondInstance.emit("connect");
+
+            firstInstance.emit("error", new Error("stale error"));
+            expect(client.state).toBe("connected");
+        });
+
         it("ignores stale 'close' event from old lgtv2 instance after reconnect", () => {
             const firstInstance = mockLgtvInstance;
             client.connect("192.168.1.1");
@@ -194,6 +221,17 @@ describe("TvClient", () => {
             });
 
             await expect(client.request("ssap://tv/getExternalInputList")).rejects.toThrow("TV error");
+        });
+
+        it("rejects when the lgtv2 callback returns an error with a payload", async () => {
+            client.connect("192.168.1.1");
+            mockLgtvInstance.emit("connect");
+
+            mockLgtvInstance.request.mockImplementation((_url: string, _payload: object, cb: (err: Error, res: null) => void) => {
+                cb(new Error("TV error"), null);
+            });
+
+            await expect(client.request("ssap://tv/switchInput", { inputId: "HDMI_1" })).rejects.toThrow("TV error");
         });
 
         it("passes payload when provided", async () => {
