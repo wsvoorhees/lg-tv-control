@@ -1,0 +1,63 @@
+{
+	"Name": "LG TV Control",
+	"Version": "0.1.0.0",
+	"Author": "Will Voorhees",
+	"Actions": [
+		{
+			"Name": "Power On",
+			"UUID": "com.will-voorhees.lg-tv-control.power-on",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Connects to the LG TV, waking it from standby.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Counter",
+			"UUID": "com.will-voorhees.lg-tv-control.increment",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Displays a count, which increments by one on press.",
+			"PropertyInspectorPath": "ui/increment-counter.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		}
+	],
+	"Category": "LG TV Control",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "Allows you to Control your LG WebOS Tv using your Stream Deck",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 3,
+	"Software": {
+		"MinimumVersion": "6.9"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "20",
+		"Debug": "enabled"
+	},
+	"UUID": "com.will-voorhees.lg-tv-control"
+}
