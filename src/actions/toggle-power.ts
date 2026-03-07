@@ -1,7 +1,7 @@
 import { action, KeyDownEvent, SingletonAction, WillAppearEvent, WillDisappearEvent } from "@elgato/streamdeck";
 import { tvClient, type ConnectionState } from "../tv-client";
 
-type ToggleTvSettings = {
+type TogglePowerSettings = {
     tvIpAddress?: string;
 };
 
@@ -11,11 +11,11 @@ const STATE_LABELS: Record<ConnectionState, string> = {
     connected: "On",
 };
 
-@action({ UUID: "com.will-voorhees.lg-tv-control.toggle-tv" })
-export class ToggleTv extends SingletonAction<ToggleTvSettings> {
+@action({ UUID: "com.will-voorhees.lg-tv-control.toggle-power" })
+export class TogglePower extends SingletonAction<TogglePowerSettings> {
     private _stateChangeHandler: ((state: ConnectionState) => void) | null = null;
 
-    override onWillAppear(ev: WillAppearEvent<ToggleTvSettings>): void {
+    override onWillAppear(ev: WillAppearEvent<TogglePowerSettings>): void {
         const { tvIpAddress } = ev.payload.settings;
         if (tvIpAddress) {
             tvClient.connect(tvIpAddress);
@@ -31,14 +31,14 @@ export class ToggleTv extends SingletonAction<ToggleTvSettings> {
         tvClient.on("stateChange", this._stateChangeHandler);
     }
 
-    override onWillDisappear(_ev: WillDisappearEvent<ToggleTvSettings>): void {
+    override onWillDisappear(_ev: WillDisappearEvent<TogglePowerSettings>): void {
         if (this._stateChangeHandler) {
             tvClient.off("stateChange", this._stateChangeHandler);
             this._stateChangeHandler = null;
         }
     }
 
-    override async onKeyDown(ev: KeyDownEvent<ToggleTvSettings>): Promise<void> {
+    override async onKeyDown(ev: KeyDownEvent<TogglePowerSettings>): Promise<void> {
         const { tvIpAddress } = ev.payload.settings;
         if (!tvIpAddress) {
             ev.action.setTitle("No IP");

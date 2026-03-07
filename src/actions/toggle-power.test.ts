@@ -22,7 +22,7 @@ vi.mock("@elgato/streamdeck", () => ({
     SingletonAction: class {},
 }));
 
-const { ToggleTv } = await import("./toggle-tv.js");
+const { TogglePower } = await import("./toggle-power.js");
 
 function makeMockAction() {
     return { setTitle: vi.fn() };
@@ -36,14 +36,14 @@ function makeKeyDownEvent(settings: { tvIpAddress?: string } = {}) {
     return { payload: { settings }, action: makeMockAction() };
 }
 
-describe("ToggleTv", () => {
-    let action: InstanceType<typeof ToggleTv>;
+describe("TogglePower", () => {
+    let action: InstanceType<typeof TogglePower>;
 
     beforeEach(() => {
         vi.clearAllMocks();
         stateChangeListener = null;
         mockTvClient.state = "disconnected";
-        action = new ToggleTv();
+        action = new TogglePower();
     });
 
     describe("onWillAppear", () => {
