@@ -97,5 +97,4 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
     }
 });
 
-// Finally, connect to the Stream Deck and fetch initial global settings.
-streamDeck.connect().then(() => streamDeck.settings.getGlobalSettings());
+streamDeck.connect();
