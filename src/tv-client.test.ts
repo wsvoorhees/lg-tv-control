@@ -104,6 +104,15 @@ describe("TvClient", () => {
             expect(client.state).toBe("connected");
         });
 
+        it("resets state to connecting when lgtv2 emits a connecting event while connected", () => {
+            client.connect("192.168.1.1");
+            mockLgtvInstance.emit("connect");
+            expect(client.state).toBe("connected");
+
+            mockLgtvInstance.emit("connecting");
+            expect(client.state).toBe("connecting");
+        });
+
         it("ignores stale 'close' event from old lgtv2 instance after reconnect", () => {
             const firstInstance = mockLgtvInstance;
             client.connect("192.168.1.1");
@@ -131,6 +140,20 @@ describe("TvClient", () => {
             client.connect("192.168.1.1");
             mockLgtvInstance.emit("connect");
             client.disconnect();
+            expect(client.state).toBe("disconnected");
+        });
+
+        it("emits stateChange with 'disconnected' when previously connecting", () => {
+            const listener = vi.fn();
+            client.on("stateChange", listener);
+            client.connect("192.168.1.1");
+            listener.mockClear();
+            client.disconnect();
+            expect(listener).toHaveBeenCalledWith("disconnected");
+        });
+
+        it("does not throw when called before any connection", () => {
+            expect(() => client.disconnect()).not.toThrow();
             expect(client.state).toBe("disconnected");
         });
 

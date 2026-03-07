@@ -95,6 +95,25 @@ describe("LaunchApp", () => {
             vi.useRealTimers();
         });
 
+        it("restores title to appLabel after 2 seconds when no appId but appLabel is set", async () => {
+            vi.useFakeTimers();
+            const ev = makeKeyDownEvent({ appLabel: "Netflix" });
+            await action.onKeyDown(ev as never);
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("Netflix");
+            vi.useRealTimers();
+        });
+
+        it("shows '...' when state is connecting", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "connecting";
+            const ev = makeKeyDownEvent({ appId: "netflix" });
+            await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("...");
+            expect(mockTvClient.request).not.toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
         it("shows '...' when not connected", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "disconnected";

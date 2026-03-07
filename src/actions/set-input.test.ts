@@ -95,6 +95,25 @@ describe("SetInput", () => {
             vi.useRealTimers();
         });
 
+        it("restores title to inputLabel after 2 seconds when no inputId but inputLabel is set", async () => {
+            vi.useFakeTimers();
+            const ev = makeKeyDownEvent({ inputLabel: "PlayStation" });
+            await action.onKeyDown(ev as never);
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("PlayStation");
+            vi.useRealTimers();
+        });
+
+        it("shows '...' when state is connecting", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "connecting";
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
+            await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("...");
+            expect(mockTvClient.request).not.toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
         it("shows '...' when not connected", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "disconnected";
