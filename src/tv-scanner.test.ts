@@ -11,8 +11,7 @@ vi.mock("node-ssdp", () => ({
     Client: vi.fn(function () { return mockClientInstance; }),
 }));
 
-// Import after mocking
-const { scanForTVs } = await import("./tv-scanner.js");
+import { scanForTVs } from "./tv-scanner.js";
 
 describe("scanForTVs", () => {
     beforeEach(() => {

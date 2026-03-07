@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ConnectionState } from "../tv-client.js";
 
-const mockTvClient = {
+const mockTvClient = vi.hoisted(() => ({
     state: "disconnected" as ConnectionState,
     request: vi.fn(),
-};
+}));
 
 vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
 
@@ -13,7 +13,7 @@ vi.mock("@elgato/streamdeck", () => ({
     SingletonAction: class {},
 }));
 
-const { SetInput } = await import("./set-input.js");
+import { SetInput } from "./set-input.js";
 
 function makeMockAction() {
     return { setTitle: vi.fn() };

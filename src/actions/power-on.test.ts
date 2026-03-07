@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ConnectionState } from "../tv-client.js";
 
-let stateChangeListeners: ((state: ConnectionState) => void)[] = [];
-
-const mockTvClient = {
-    state: "disconnected" as ConnectionState,
-    reconnect: vi.fn(),
-    on: vi.fn((event: string, listener: (state: ConnectionState) => void) => {
-        if (event === "stateChange") stateChangeListeners.push(listener);
-    }),
-    off: vi.fn(),
-};
+const { mockTvClient, stateChangeListeners } = vi.hoisted(() => {
+    const stateChangeListeners: ((state: ConnectionState) => void)[] = [];
+    const mockTvClient = {
+        state: "disconnected" as ConnectionState,
+        reconnect: vi.fn(),
+        on: vi.fn((event: string, listener: (state: ConnectionState) => void) => {
+            if (event === "stateChange") stateChangeListeners.push(listener);
+        }),
+        off: vi.fn(),
+    };
+    return { mockTvClient, stateChangeListeners };
+});
 
 vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
 
@@ -19,7 +21,7 @@ vi.mock("@elgato/streamdeck", () => ({
     SingletonAction: class {},
 }));
 
-const { PowerOn } = await import("./power-on.js");
+import { PowerOn } from "./power-on.js";
 
 function makeWillAppearEvent(id = "action-id") {
     return { action: { id, setTitle: vi.fn() } };
@@ -30,7 +32,7 @@ describe("PowerOn", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        stateChangeListeners = [];
+        stateChangeListeners.length = 0;
         mockTvClient.state = "disconnected";
         action = new PowerOn();
     });

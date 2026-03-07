@@ -12,12 +12,13 @@ function makeMockLgtvInstance() {
     return emitter;
 }
 
-let mockLgtvInstance = makeMockLgtvInstance();
-const mockLgtv2 = vi.fn(() => mockLgtvInstance);
+const { mockLgtv2 } = vi.hoisted(() => ({ mockLgtv2: vi.fn() }));
 
 vi.mock("lgtv2", () => ({ default: mockLgtv2 }));
 
-const { TvClient } = await import("./tv-client.js");
+import { TvClient } from "./tv-client.js";
+
+let mockLgtvInstance = makeMockLgtvInstance();
 
 describe("TvClient", () => {
     let client: InstanceType<typeof TvClient>;
