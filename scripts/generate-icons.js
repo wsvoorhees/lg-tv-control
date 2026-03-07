@@ -24,12 +24,18 @@ function svg(content) {
 // ── Icon definitions ─────────────────────────────────────────────────────────
 
 const icons = {
-    // Power symbol: open arc + vertical line through the gap
-    // Circle center (36,44) r=18 → bottom y=62 (10px margin); line top y=10 (10px margin)
-    // Gap at y=28: x-offset = sqrt(18²-(44-28)²) = sqrt(68) ≈ 8.25
+    // Two circular arrows (clockwise cycle) + vertical line
+    // Center (36,36), r=22. Each arc covers ~150° (short clockwise arc, large-arc=0 sweep=1).
+    // Arc 1: bearing 345°→135° (upper-right quadrant), arrowhead at lower-right end
+    //   Start (345°): (30.3, 14.7)  End (135°): (51.6, 51.6)  tangent=(cos135°,sin135°)=(-0.707,0.707)
+    // Arc 2: bearing 165°→315° (lower-left quadrant), arrowhead at upper-left end
+    //   Start (165°): (41.7, 57.2)  End (315°): (20.4, 20.4)  tangent=(cos315°,sin315°)=(0.707,-0.707)
     "toggle-power": svg(`
-  <line x1="36" y1="10" x2="36" y2="32" stroke="white" stroke-width="5" stroke-linecap="round"/>
-  <path d="M27.75,28 A18,18 0 1 1 44.25,28" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>`),
+  <path d="M30.3,14.7 A22,22 0 0 1 51.6,51.6" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="51.6,51.6 60.1,48.7 54.5,43.1" fill="white"/>
+  <path d="M41.7,57.2 A22,22 0 0 1 20.4,20.4" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  <polygon points="20.4,20.4 11.9,23.3 17.5,28.9" fill="white"/>
+  <line x1="36" y1="24" x2="36" y2="48" stroke="white" stroke-width="5" stroke-linecap="round"/>`),
 
     // Power circle (full) + vertical line — "on"
     "power-on": svg(`
