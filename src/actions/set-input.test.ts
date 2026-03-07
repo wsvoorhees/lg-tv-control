@@ -86,6 +86,15 @@ describe("SetInput", () => {
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
 
+        it("restores title to 'Input' after 2 seconds when no inputId", async () => {
+            vi.useFakeTimers();
+            const ev = makeKeyDownEvent();
+            await action.onKeyDown(ev as never);
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("Input");
+            vi.useRealTimers();
+        });
+
         it("shows '...' when not connected", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "disconnected";

@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Capture the onSendToPlugin callback registered by plugin.ts
+// Capture callbacks registered by plugin.ts at load time
 let sendToPluginHandler: ((ev: { payload: unknown }) => Promise<void>) | null = null;
+let globalSettingsHandler: ((ev: { settings: Record<string, unknown> }) => void) | null = null;
 
 const mockSendToPropertyInspector = vi.fn();
 
@@ -15,7 +16,7 @@ vi.mock("@elgato/streamdeck", () => ({
         },
         connect: vi.fn().mockResolvedValue(undefined),
         settings: {
-            onDidReceiveGlobalSettings: vi.fn(),
+            onDidReceiveGlobalSettings: vi.fn((handler) => { globalSettingsHandler = handler; }),
             getGlobalSettings: vi.fn(),
         },
     },
@@ -25,6 +26,8 @@ vi.mock("@elgato/streamdeck", () => ({
 
 const mockTvClient = {
     state: "connected",
+    connect: vi.fn(),
+    disconnect: vi.fn(),
     request: vi.fn(),
 };
 
@@ -38,6 +41,26 @@ await import("./plugin.js");
 describe("plugin", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+    });
+
+    describe("onDidReceiveGlobalSettings", () => {
+        it("calls tvClient.connect() with the IP when tvIpAddress is set", () => {
+            globalSettingsHandler!({ settings: { tvIpAddress: "192.168.1.1" } });
+            expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
+            expect(mockTvClient.disconnect).not.toHaveBeenCalled();
+        });
+
+        it("calls tvClient.disconnect() when tvIpAddress is absent", () => {
+            globalSettingsHandler!({ settings: {} });
+            expect(mockTvClient.disconnect).toHaveBeenCalled();
+            expect(mockTvClient.connect).not.toHaveBeenCalled();
+        });
+
+        it("calls tvClient.disconnect() when tvIpAddress is empty string", () => {
+            globalSettingsHandler!({ settings: { tvIpAddress: "" } });
+            expect(mockTvClient.disconnect).toHaveBeenCalled();
+            expect(mockTvClient.connect).not.toHaveBeenCalled();
+        });
     });
 
     describe("onSendToPlugin", () => {

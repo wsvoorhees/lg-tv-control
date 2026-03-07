@@ -23,6 +23,7 @@ export class LaunchApp extends SingletonAction<LaunchAppSettings> {
 
         if (!appId) {
             ev.action.setTitle("No app");
+            setTimeout(() => ev.action.setTitle(appLabel ?? "App"), 2000);
             return;
         }
 

@@ -23,6 +23,7 @@ export class SetInput extends SingletonAction<SetInputSettings> {
 
         if (!inputId) {
             ev.action.setTitle("No input");
+            setTimeout(() => ev.action.setTitle(inputLabel ?? "Input"), 2000);
             return;
         }
 

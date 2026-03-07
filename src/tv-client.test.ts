@@ -189,4 +189,32 @@ describe("TvClient", () => {
             expect(result).toEqual({ ok: true });
         });
     });
+
+    describe("reconnect()", () => {
+        it("does nothing when no IP has ever been set", () => {
+            client.reconnect();
+            expect(mockLgtv2).not.toHaveBeenCalled();
+        });
+
+        it("reconnects using the stored IP after a connection drop", () => {
+            client.connect("192.168.1.1");
+            // Simulate lgtv2 losing the connection (state → disconnected, _ip still set)
+            mockLgtvInstance.emit("close");
+            expect(client.state).toBe("disconnected");
+
+            const secondInstance = makeMockLgtvInstance();
+            mockLgtv2.mockReturnValue(secondInstance);
+
+            client.reconnect();
+            expect(mockLgtv2).toHaveBeenCalledTimes(2);
+            expect(mockLgtv2).toHaveBeenLastCalledWith(expect.objectContaining({ url: "ws://192.168.1.1:3000" }));
+        });
+
+        it("is a no-op when already connecting to the same IP", () => {
+            client.connect("192.168.1.1");
+            // state is "connecting", same IP — connect() guard returns early
+            client.reconnect();
+            expect(mockLgtv2).toHaveBeenCalledTimes(1);
+        });
+    });
 });

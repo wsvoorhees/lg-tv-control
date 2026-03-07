@@ -86,6 +86,15 @@ describe("LaunchApp", () => {
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
 
+        it("restores title to 'App' after 2 seconds when no appId", async () => {
+            vi.useFakeTimers();
+            const ev = makeKeyDownEvent();
+            await action.onKeyDown(ev as never);
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("App");
+            vi.useRealTimers();
+        });
+
         it("shows '...' when not connected", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "disconnected";
