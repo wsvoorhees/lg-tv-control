@@ -26,16 +26,17 @@ if (tvSelectorRoot) {
             <sdpi-item>
                 <button id="connect-btn" class="pi-btn">Connect</button>
             </sdpi-item>
+            <hr class="tv-config-separator">
+            <sdpi-item label="Found TVs" id="tv-list-item">
+                <sdpi-select id="tv-select">
+                    <option value="">Select a TV...</option>
+                </sdpi-select>
+            </sdpi-item>
+            <sdpi-item>
+                <button id="scan-btn" class="pi-btn">Scan for TVs</button>
+                <p id="scan-status" class="pi-status"></p>
+            </sdpi-item>
         </div>
-        <sdpi-item label="Found TVs" id="tv-list-item">
-            <sdpi-select id="tv-select">
-                <option value="">Select a TV...</option>
-            </sdpi-select>
-        </sdpi-item>
-        <sdpi-item>
-            <button id="scan-btn" class="pi-btn">Scan for TVs</button>
-            <p id="scan-status" class="pi-status"></p>
-        </sdpi-item>
     `;
 }
 
@@ -63,6 +64,7 @@ style.textContent = `
         font-size: 11px;
         opacity: 0.7;
         min-height: 14px;
+        color: #ffffff;
     }
     .tv-config-group {
         margin: 6px 0 8px 0;
@@ -102,6 +104,12 @@ style.textContent = `
     .tv-connection-text {
         font-size: 10px;
         opacity: 0.8;
+        color: #ffffff;
+    }
+    .tv-config-separator {
+        border: none;
+        border-top: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
+        margin: 12px 0;
     }
     #ip-input, #name-input {
         width: 100%;
