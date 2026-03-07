@@ -4,10 +4,42 @@
 	"Author": "Will Voorhees",
 	"Actions": [
 		{
+			"Name": "Toggle Power",
+			"UUID": "com.will-voorhees.lg-tv-control.toggle-tv",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Toggles the LG TV on or off.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
 			"Name": "Power On",
 			"UUID": "com.will-voorhees.lg-tv-control.power-on",
 			"Icon": "imgs/actions/counter/icon",
 			"Tooltip": "Connects to the LG TV, waking it from standby.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Power Off",
+			"UUID": "com.will-voorhees.lg-tv-control.turn-off",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Turns the LG TV off.",
 			"PropertyInspectorPath": "ui/tv-connection.html",
 			"Controllers": [
 				"Keypad"
@@ -36,10 +68,10 @@
 			]
 		},
 		{
-			"Name": "Turn Off",
-			"UUID": "com.will-voorhees.lg-tv-control.turn-off",
+			"Name": "Volume Up",
+			"UUID": "com.will-voorhees.lg-tv-control.volume-up",
 			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Turns the LG TV off.",
+			"Tooltip": "Increases the TV volume.",
 			"PropertyInspectorPath": "ui/tv-connection.html",
 			"Controllers": [
 				"Keypad"
@@ -52,11 +84,123 @@
 			]
 		},
 		{
-			"Name": "Toggle TV",
-			"UUID": "com.will-voorhees.lg-tv-control.toggle-tv",
+			"Name": "Volume Down",
+			"UUID": "com.will-voorhees.lg-tv-control.volume-down",
 			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Toggles the LG TV on or off.",
+			"Tooltip": "Decreases the TV volume.",
 			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Toggle Mute",
+			"UUID": "com.will-voorhees.lg-tv-control.toggle-mute",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Toggles the TV mute state.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Play",
+			"UUID": "com.will-voorhees.lg-tv-control.media-play",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Sends the play command to the TV.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Pause",
+			"UUID": "com.will-voorhees.lg-tv-control.media-pause",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Sends the pause command to the TV.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Stop",
+			"UUID": "com.will-voorhees.lg-tv-control.media-stop",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Sends the stop command to the TV.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Rewind",
+			"UUID": "com.will-voorhees.lg-tv-control.media-rewind",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Sends the rewind command to the TV.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Fast Forward",
+			"UUID": "com.will-voorhees.lg-tv-control.media-fast-forward",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Sends the fast forward command to the TV.",
+			"PropertyInspectorPath": "ui/tv-connection.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Launch App",
+			"UUID": "com.will-voorhees.lg-tv-control.launch-app",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Launches an app on the TV.",
+			"PropertyInspectorPath": "ui/launch-app.html",
 			"Controllers": [
 				"Keypad"
 			],

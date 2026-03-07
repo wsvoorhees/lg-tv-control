@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>Launch App</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+</head>
+
+<body>
+    <sdpi-item label="TV IP Address">
+        <sdpi-textfield id="ip-input" setting="tvIpAddress" placeholder="192.168.1.x"></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label="Scan">
+        <button id="scan-btn" class="pi-btn">Scan for TVs</button>
+    </sdpi-item>
+
+    <sdpi-item label="Found TVs" id="tv-list-item" style="display: none">
+        <sdpi-select id="tv-select">
+            <option value="">Select a TV...</option>
+        </sdpi-select>
+    </sdpi-item>
+
+    <p id="scan-status" class="pi-status"></p>
+
+    <sdpi-item label="App">
+        <button id="fetch-btn" class="pi-btn">Fetch Apps from TV</button>
+    </sdpi-item>
+
+    <sdpi-item label="Select" id="app-select-item" style="display: none">
+        <sdpi-select id="app-select" setting="appId">
+            <option value="">Select an app...</option>
+        </sdpi-select>
+    </sdpi-item>
+
+    <p id="app-status" class="pi-status"></p>
+
+    <script src="tv-selector.js"></script>
+    <script>
+        document.getElementById('fetch-btn').addEventListener('click', () => {
+            document.getElementById('app-status').textContent = 'Fetching apps...';
+            $SD.sendToPlugin({ event: 'getAppList' });
+        });
+
+        document.getElementById('app-select').addEventListener('change', (e) => {
+            const appId = e.target.value;
+            const option = e.target.selectedOptions[0];
+            const appLabel = option ? option.textContent.trim() : appId;
+            if (appId) {
+                $SD.setSettings({ appId, appLabel });
+            }
+        });
+
+        $SD.on('sendToPropertyInspector', ({ payload }) => {
+            if (payload.event !== 'appList') return;
+
+            const select = document.getElementById('app-select');
+            const status = document.getElementById('app-status');
+
+            select.innerHTML = '<option value="">Select an app...</option>';
+
+            if (!payload.apps || payload.apps.length === 0) {
+                status.textContent = 'No apps found. Is the TV connected?';
+                return;
+            }
+
+            payload.apps.forEach(app => {
+                const option = document.createElement('option');
+                option.value = app.id;
+                option.textContent = app.label ?? app.id;
+                select.appendChild(option);
+            });
+
+            document.getElementById('app-select-item').style.display = '';
+            status.textContent = `Found ${payload.apps.length} app(s).`;
+        });
+    </script>
+</body>
+
+</html>
