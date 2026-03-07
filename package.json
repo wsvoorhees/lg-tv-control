@@ -26,5 +26,6 @@
         "@elgato/streamdeck": "^2.0.0",
         "lgtv2": "^1.6.3",
         "node-ssdp": "^4.0.1"
-    }
+    },
+    "version": "0.8.0-beta"
 }
