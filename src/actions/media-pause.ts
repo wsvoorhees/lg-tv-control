@@ -21,6 +21,6 @@ export class MediaPause extends SingletonAction<MediaPauseSettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://media.controls/pause");
+        try { await tvClient.request("ssap://media.controls/pause"); } catch { /* ignore */ }
     }
 }

@@ -131,5 +131,29 @@ describe("LaunchApp", () => {
             await action.onKeyDown(ev as never);
             expect(mockTvClient.request).toHaveBeenCalledWith("ssap://system.launcher/launch", { id: "com.webos.app.hdmi1" });
         });
+
+        it("shows '!' and restores appLabel after request failure", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "connected";
+            mockTvClient.request.mockRejectedValue(new Error("TV error"));
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", appId: "netflix", appLabel: "Netflix" });
+            await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("!");
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("Netflix");
+            vi.useRealTimers();
+        });
+
+        it("shows '!' and restores appId when no appLabel after request failure", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "connected";
+            mockTvClient.request.mockRejectedValue(new Error("TV error"));
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", appId: "netflix" });
+            await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("!");
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("netflix");
+            vi.useRealTimers();
+        });
     });
 });

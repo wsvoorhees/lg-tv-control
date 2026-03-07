@@ -21,6 +21,6 @@ export class MediaFastForward extends SingletonAction<MediaFastForwardSettings> 
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://media.controls/fastForward");
+        try { await tvClient.request("ssap://media.controls/fastForward"); } catch { /* ignore */ }
     }
 }

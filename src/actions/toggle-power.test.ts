@@ -138,5 +138,12 @@ describe("TogglePower", () => {
             expect(mockTvClient.connect).not.toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
+
+        it("does not throw when turnOff request fails", async () => {
+            mockTvClient.state = "connected";
+            mockTvClient.request.mockRejectedValue(new Error("TV error"));
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1" });
+            await expect(action.onKeyDown(ev as never)).resolves.toBeUndefined();
+        });
     });
 });

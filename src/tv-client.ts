@@ -9,6 +9,7 @@ export class TvClient extends EventEmitter {
     private client: LgtvInstance | null = null;
     private _state: ConnectionState = "disconnected";
     private _ip: string | null = null;
+    private _connectionId = 0;
 
     get state(): ConnectionState {
         return this._state;
@@ -19,28 +20,30 @@ export class TvClient extends EventEmitter {
 
         this.disconnect();
         this._ip = ip;
+        const id = this._connectionId;
         this._setState("connecting");
 
         this.client = lgtv2({ url: `ws://${ip}:3000`, reconnect: 5000 });
 
         this.client.on("connect", () => {
-            this._setState("connected");
+            if (id === this._connectionId) this._setState("connected");
         });
 
         this.client.on("connecting", () => {
-            this._setState("connecting");
+            if (id === this._connectionId) this._setState("connecting");
         });
 
         this.client.on("close", () => {
-            this._setState("disconnected");
+            if (id === this._connectionId) this._setState("disconnected");
         });
 
         this.client.on("error", (_err: Error) => {
-            this._setState("disconnected");
+            if (id === this._connectionId) this._setState("disconnected");
         });
     }
 
     disconnect(): void {
+        this._connectionId++;
         if (this.client) {
             this.client.disconnect();
             this.client = null;

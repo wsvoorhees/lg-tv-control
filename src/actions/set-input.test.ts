@@ -131,5 +131,29 @@ describe("SetInput", () => {
             await action.onKeyDown(ev as never);
             expect(mockTvClient.request).toHaveBeenCalledWith("ssap://tv/switchInput", { inputId: "HDMI_2" });
         });
+
+        it("shows '!' and restores inputLabel after request failure", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "connected";
+            mockTvClient.request.mockRejectedValue(new Error("TV error"));
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1", inputLabel: "PlayStation" });
+            await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("!");
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("PlayStation");
+            vi.useRealTimers();
+        });
+
+        it("shows '!' and restores inputId when no inputLabel after request failure", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "connected";
+            mockTvClient.request.mockRejectedValue(new Error("TV error"));
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
+            await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("!");
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("HDMI_1");
+            vi.useRealTimers();
+        });
     });
 });

@@ -21,6 +21,6 @@ export class MediaPlay extends SingletonAction<MediaPlaySettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://media.controls/play");
+        try { await tvClient.request("ssap://media.controls/play"); } catch { /* ignore */ }
     }
 }

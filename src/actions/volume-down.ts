@@ -21,6 +21,6 @@ export class VolumeDown extends SingletonAction<VolumeDownSettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://audio/volumeDown");
+        try { await tvClient.request("ssap://audio/volumeDown"); } catch { /* ignore */ }
     }
 }

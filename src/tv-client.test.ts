@@ -87,6 +87,36 @@ describe("TvClient", () => {
             client.connect("192.168.1.2");
             expect(mockLgtv2).toHaveBeenCalledTimes(2);
         });
+
+        it("ignores stale 'connect' event from old lgtv2 instance after reconnect", () => {
+            const firstInstance = mockLgtvInstance;
+            client.connect("192.168.1.1");
+
+            const secondInstance = makeMockLgtvInstance();
+            mockLgtv2.mockReturnValue(secondInstance);
+            client.connect("192.168.1.2");
+            expect(client.state).toBe("connecting");
+
+            firstInstance.emit("connect");
+            expect(client.state).toBe("connecting");
+
+            secondInstance.emit("connect");
+            expect(client.state).toBe("connected");
+        });
+
+        it("ignores stale 'close' event from old lgtv2 instance after reconnect", () => {
+            const firstInstance = mockLgtvInstance;
+            client.connect("192.168.1.1");
+            firstInstance.emit("connect");
+
+            const secondInstance = makeMockLgtvInstance();
+            mockLgtv2.mockReturnValue(secondInstance);
+            client.connect("192.168.1.2");
+            secondInstance.emit("connect");
+
+            firstInstance.emit("close");
+            expect(client.state).toBe("connected");
+        });
     });
 
     describe("disconnect()", () => {
@@ -101,6 +131,15 @@ describe("TvClient", () => {
             client.connect("192.168.1.1");
             mockLgtvInstance.emit("connect");
             client.disconnect();
+            expect(client.state).toBe("disconnected");
+        });
+
+        it("ignores stale events from the lgtv2 instance after disconnect()", () => {
+            const instance = mockLgtvInstance;
+            client.connect("192.168.1.1");
+            client.disconnect();
+
+            instance.emit("connect");
             expect(client.state).toBe("disconnected");
         });
     });

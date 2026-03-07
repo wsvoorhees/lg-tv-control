@@ -21,6 +21,6 @@ export class VolumeUp extends SingletonAction<VolumeUpSettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://audio/volumeUp");
+        try { await tvClient.request("ssap://audio/volumeUp"); } catch { /* ignore */ }
     }
 }

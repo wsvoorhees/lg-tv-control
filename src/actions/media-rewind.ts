@@ -21,6 +21,6 @@ export class MediaRewind extends SingletonAction<MediaRewindSettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://media.controls/rewind");
+        try { await tvClient.request("ssap://media.controls/rewind"); } catch { /* ignore */ }
     }
 }

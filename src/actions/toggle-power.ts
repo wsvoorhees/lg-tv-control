@@ -46,7 +46,7 @@ export class TogglePower extends SingletonAction<TogglePowerSettings> {
         }
 
         if (tvClient.state === "connected") {
-            await tvClient.request("ssap://system/turnOff");
+            try { await tvClient.request("ssap://system/turnOff"); } catch { /* ignore */ }
         } else if (tvClient.state === "disconnected") {
             tvClient.connect(tvIpAddress);
         }

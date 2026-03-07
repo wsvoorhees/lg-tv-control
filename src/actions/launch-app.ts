@@ -35,6 +35,11 @@ export class LaunchApp extends SingletonAction<LaunchAppSettings> {
             return;
         }
 
-        await tvClient.request("ssap://system.launcher/launch", { id: appId });
+        try {
+            await tvClient.request("ssap://system.launcher/launch", { id: appId });
+        } catch {
+            ev.action.setTitle("!");
+            setTimeout(() => ev.action.setTitle(appLabel ?? appId), 2000);
+        }
     }
 }

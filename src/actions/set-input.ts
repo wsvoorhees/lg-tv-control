@@ -35,6 +35,11 @@ export class SetInput extends SingletonAction<SetInputSettings> {
             return;
         }
 
-        await tvClient.request("ssap://tv/switchInput", { inputId });
+        try {
+            await tvClient.request("ssap://tv/switchInput", { inputId });
+        } catch {
+            ev.action.setTitle("!");
+            setTimeout(() => ev.action.setTitle(inputLabel ?? inputId), 2000);
+        }
     }
 }

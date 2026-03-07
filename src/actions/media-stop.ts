@@ -21,6 +21,6 @@ export class MediaStop extends SingletonAction<MediaStopSettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://media.controls/stop");
+        try { await tvClient.request("ssap://media.controls/stop"); } catch { /* ignore */ }
     }
 }

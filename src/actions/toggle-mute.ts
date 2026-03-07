@@ -21,7 +21,9 @@ export class ToggleMute extends SingletonAction<ToggleMuteSettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        const res = await tvClient.request("ssap://audio/getMute") as { mute: boolean };
-        await tvClient.request("ssap://audio/setMute", { mute: !res.mute });
+        try {
+            const res = await tvClient.request("ssap://audio/getMute") as { mute: boolean };
+            await tvClient.request("ssap://audio/setMute", { mute: !res.mute });
+        } catch { /* ignore */ }
     }
 }

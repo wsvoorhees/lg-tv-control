@@ -45,6 +45,6 @@ export class TurnOff extends SingletonAction<TurnOffSettings> {
             return;
         }
         if (tvClient.state !== "connected") return;
-        await tvClient.request("ssap://system/turnOff");
+        try { await tvClient.request("ssap://system/turnOff"); } catch { /* ignore */ }
     }
 }

@@ -86,5 +86,19 @@ describe("ToggleMute", () => {
             await action.onKeyDown(ev as never);
             expect(mockTvClient.request).toHaveBeenNthCalledWith(2, "ssap://audio/setMute", { mute: true });
         });
+
+        it("does nothing when connecting", async () => {
+            mockTvClient.state = "connecting";
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1" });
+            await action.onKeyDown(ev as never);
+            expect(mockTvClient.request).not.toHaveBeenCalled();
+        });
+
+        it("does not throw when request fails", async () => {
+            mockTvClient.state = "connected";
+            mockTvClient.request.mockRejectedValue(new Error("TV error"));
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1" });
+            await expect(action.onKeyDown(ev as never)).resolves.toBeUndefined();
+        });
     });
 });
