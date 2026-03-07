@@ -1,5 +1,6 @@
 import { Client, SsdpHeaders } from "node-ssdp";
 import type { RemoteInfo } from "dgram";
+import streamDeck from "@elgato/streamdeck";
 
 export type DiscoveredTV = {
     ip: string;
@@ -36,6 +37,7 @@ export function scanForTVs(): Promise<DiscoveredTV[]> {
 
         client.on("response", (headers: SsdpHeaders, _statusCode: number, rinfo: RemoteInfo) => {
             const ip = rinfo.address;
+            streamDeck.logger.info("SSDP response", { ip, headers });
             if (!found.has(ip)) {
                 const server = String(headers["SERVER"] ?? headers["server"] ?? "");
                 const location = String(headers["LOCATION"] ?? headers["location"] ?? "");
@@ -58,6 +60,7 @@ export function scanForTVs(): Promise<DiscoveredTV[]> {
                     return { ip, name };
                 })
             );
+            streamDeck.logger.info("SSDP scan complete", { tvs });
             resolve(tvs);
         }, SCAN_TIMEOUT_MS);
     });

@@ -40,15 +40,29 @@ streamDeck.actions.registerAction(new MediaRewind());
 streamDeck.actions.registerAction(new MediaFastForward());
 streamDeck.actions.registerAction(new LaunchApp());
 
+// Push TV connection state to the property inspector whenever it changes.
+tvClient.on("stateChange", async (state) => {
+    try {
+        await streamDeck.ui.sendToPropertyInspector({ event: "connectionState", state });
+    } catch { /* PI may not be open */ }
+});
+
 // Handle messages from the property inspector.
 streamDeck.ui.onSendToPlugin(async (ev) => {
     const payload = ev.payload as { event?: string };
 
+    if (payload.event === "getConnectionState") {
+        await streamDeck.ui.sendToPropertyInspector({ event: "connectionState", state: tvClient.state });
+    }
+
     if (payload.event === "scanForTVs") {
+        streamDeck.logger.info("TV scan started");
         try {
             const tvs = await scanForTVs();
+            streamDeck.logger.info("TV scan complete", tvs);
             await streamDeck.ui.sendToPropertyInspector({ event: "tvScanResults", tvs });
-        } catch {
+        } catch (err) {
+            streamDeck.logger.error("TV scan failed", err);
             await streamDeck.ui.sendToPropertyInspector({ event: "tvScanResults", tvs: [] });
         }
     }

@@ -11,6 +11,10 @@ vi.mock("node-ssdp", () => ({
     Client: vi.fn(function () { return mockClientInstance; }),
 }));
 
+vi.mock("@elgato/streamdeck", () => ({
+    default: { logger: { info: vi.fn(), error: vi.fn() } },
+}));
+
 import { scanForTVs } from "./tv-scanner.js";
 
 describe("scanForTVs", () => {

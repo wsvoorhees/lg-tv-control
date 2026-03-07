@@ -7,6 +7,7 @@ const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = 
         connect: vi.fn(),
         disconnect: vi.fn(),
         request: vi.fn(),
+        on: vi.fn(),
     },
     mockScanForTVs: vi.fn(),
     // Container for handlers captured by plugin.ts at load time
@@ -18,7 +19,7 @@ const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = 
 
 vi.mock("@elgato/streamdeck", () => ({
     default: {
-        logger: { setLevel: vi.fn() },
+        logger: { setLevel: vi.fn(), info: vi.fn(), error: vi.fn() },
         actions: { registerAction: vi.fn() },
         ui: {
             onSendToPlugin: vi.fn((handler) => { handlers.sendToPlugin = handler; }),
