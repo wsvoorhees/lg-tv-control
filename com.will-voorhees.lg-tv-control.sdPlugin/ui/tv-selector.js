@@ -3,16 +3,65 @@
  *
  * Expects the following elements in the host HTML:
  *   #ip-input       - sdpi-textfield bound to tvIpAddress
- *   #scan-btn       - sdpi-button that triggers a network scan
+ *   #scan-btn       - <button> that triggers a network scan
  *   #tv-list-item   - sdpi-item wrapping the scan results dropdown (hidden by default)
  *   #tv-select      - sdpi-select populated with discovered TVs
- *   #scan-status    - span for scan status text
+ *   #scan-status    - p.pi-status for scan status text
  */
+
+// Inject shared button styles
+const style = document.createElement('style');
+style.textContent = `
+    .pi-btn {
+        display: block;
+        width: 100%;
+        padding: 5px 10px;
+        background: var(--sdpi-background, #2d2d2d);
+        color: var(--sdpi-color, #d8d8d8);
+        border: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        text-align: center;
+    }
+    .pi-btn:hover:not(:disabled) { filter: brightness(1.2); }
+    .pi-btn:active:not(:disabled) { filter: brightness(0.85); }
+    .pi-btn:disabled { opacity: 0.5; cursor: default; }
+    .pi-status {
+        margin: 2px 0 4px 0;
+        padding: 0 6px;
+        font-size: 11px;
+        opacity: 0.7;
+        min-height: 14px;
+    }
+`;
+document.head.appendChild(style);
+
 function initTvSelector() {
-    document.getElementById('scan-btn').addEventListener('click', () => {
-        document.getElementById('scan-status').textContent = 'Scanning...';
+    const scanBtn = document.getElementById('scan-btn');
+
+    let scanTimeout = null;
+
+    function resetScanBtn() {
+        scanBtn.textContent = 'Scan for TVs';
+        scanBtn.disabled = false;
+        if (scanTimeout) {
+            clearTimeout(scanTimeout);
+            scanTimeout = null;
+        }
+    }
+
+    scanBtn.addEventListener('click', () => {
+        scanBtn.textContent = 'Scanning...';
+        scanBtn.disabled = true;
         document.getElementById('tv-list-item').style.display = 'none';
+        document.getElementById('scan-status').textContent = '';
         $SD.sendToPlugin({ event: 'scanForTVs' });
+
+        scanTimeout = setTimeout(() => {
+            resetScanBtn();
+            document.getElementById('scan-status').textContent = 'Scan timed out.';
+        }, 6000);
     });
 
     document.getElementById('tv-select').addEventListener('change', (e) => {
@@ -30,6 +79,7 @@ function initTvSelector() {
         const listItem = document.getElementById('tv-list-item');
         const status = document.getElementById('scan-status');
 
+        resetScanBtn();
         select.innerHTML = '<option value="">Select a TV...</option>';
 
         if (payload.tvs.length === 0) {

@@ -12,8 +12,8 @@
         <sdpi-textfield id="ip-input" setting="tvIpAddress" placeholder="192.168.1.x"></sdpi-textfield>
     </sdpi-item>
 
-    <sdpi-item label=" ">
-        <sdpi-button id="scan-btn" value="Scan for TVs"></sdpi-button>
+    <sdpi-item label="Scan">
+        <button id="scan-btn" class="pi-btn">Scan for TVs</button>
     </sdpi-item>
 
     <sdpi-item label="Found TVs" id="tv-list-item" style="display: none">
@@ -22,23 +22,19 @@
         </sdpi-select>
     </sdpi-item>
 
-    <sdpi-item label=" ">
-        <span id="scan-status" style="font-size: 11px; opacity: 0.7;"></span>
+    <p id="scan-status" class="pi-status"></p>
+
+    <sdpi-item label="Input">
+        <button id="fetch-btn" class="pi-btn">Fetch Inputs from TV</button>
     </sdpi-item>
 
-    <sdpi-item label=" " style="margin-top: 8px">
-        <sdpi-button id="fetch-btn" value="Fetch Inputs from TV"></sdpi-button>
-    </sdpi-item>
-
-    <sdpi-item label="Input" id="input-select-item">
+    <sdpi-item label="Select" id="input-select-item" style="display: none">
         <sdpi-select id="input-select" setting="inputId">
             <option value="">Select an input...</option>
         </sdpi-select>
     </sdpi-item>
 
-    <sdpi-item label=" ">
-        <span id="input-status" style="font-size: 11px; opacity: 0.7;"></span>
-    </sdpi-item>
+    <p id="input-status" class="pi-status"></p>
 
     <script src="tv-selector.js"></script>
     <script>
@@ -76,6 +72,7 @@
                 select.appendChild(option);
             });
 
+            document.getElementById('input-select-item').style.display = '';
             status.textContent = `Found ${payload.inputs.length} input(s).`;
         });
     </script>

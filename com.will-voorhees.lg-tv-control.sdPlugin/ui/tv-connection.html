@@ -12,8 +12,8 @@
         <sdpi-textfield id="ip-input" setting="tvIpAddress" placeholder="192.168.1.x"></sdpi-textfield>
     </sdpi-item>
 
-    <sdpi-item label=" ">
-        <sdpi-button id="scan-btn" value="Scan for TVs"></sdpi-button>
+    <sdpi-item label="Scan">
+        <button id="scan-btn" class="pi-btn">Scan for TVs</button>
     </sdpi-item>
 
     <sdpi-item label="Found TVs" id="tv-list-item" style="display: none">
@@ -22,9 +22,7 @@
         </sdpi-select>
     </sdpi-item>
 
-    <sdpi-item label=" ">
-        <span id="scan-status" style="font-size: 11px; opacity: 0.7;"></span>
-    </sdpi-item>
+    <p id="scan-status" class="pi-status"></p>
 
     <script src="tv-selector.js"></script>
 </body>
