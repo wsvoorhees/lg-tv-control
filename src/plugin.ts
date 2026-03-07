@@ -1,6 +1,5 @@
 import streamDeck from "@elgato/streamdeck";
 
-import { IncrementCounter } from "./actions/increment-counter";
 import { PowerOn } from "./actions/power-on";
 import { SetInput } from "./actions/set-input";
 import { tvClient } from "./tv-client";
@@ -10,7 +9,6 @@ import { scanForTVs } from "./tv-scanner";
 streamDeck.logger.setLevel("trace");
 
 // Register actions.
-streamDeck.actions.registerAction(new IncrementCounter());
 streamDeck.actions.registerAction(new PowerOn());
 streamDeck.actions.registerAction(new SetInput());
 

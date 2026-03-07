@@ -34,22 +34,6 @@
 					"TitleAlignment": "middle"
 				}
 			]
-		},
-		{
-			"Name": "Counter",
-			"UUID": "com.will-voorhees.lg-tv-control.increment",
-			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Displays a count, which increments by one on press.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
-			"Controllers": [
-				"Keypad"
-			],
-			"States": [
-				{
-					"Image": "imgs/actions/counter/key",
-					"TitleAlignment": "middle"
-				}
-			]
 		}
 	],
 	"Category": "LG TV Control",
