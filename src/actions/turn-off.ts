@@ -13,6 +13,8 @@ const STATE_LABELS: Record<ConnectionState, string> = {
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.turn-off" })
 export class TurnOff extends SingletonAction<TurnOffSettings> {
+    private _stateChangeHandler: ((state: ConnectionState) => void) | null = null;
+
     override onWillAppear(ev: WillAppearEvent<TurnOffSettings>): void {
         const { tvIpAddress } = ev.payload.settings;
         if (tvIpAddress) {
@@ -20,13 +22,20 @@ export class TurnOff extends SingletonAction<TurnOffSettings> {
         }
         ev.action.setTitle(STATE_LABELS[tvClient.state]);
 
-        tvClient.on("stateChange", (state: ConnectionState) => {
+        if (this._stateChangeHandler) {
+            tvClient.off("stateChange", this._stateChangeHandler);
+        }
+        this._stateChangeHandler = (state: ConnectionState) => {
             ev.action.setTitle(STATE_LABELS[state]);
-        });
+        };
+        tvClient.on("stateChange", this._stateChangeHandler);
     }
 
     override onWillDisappear(_ev: WillDisappearEvent<TurnOffSettings>): void {
-        tvClient.removeAllListeners("stateChange");
+        if (this._stateChangeHandler) {
+            tvClient.off("stateChange", this._stateChangeHandler);
+            this._stateChangeHandler = null;
+        }
     }
 
     override async onKeyDown(ev: KeyDownEvent<TurnOffSettings>): Promise<void> {

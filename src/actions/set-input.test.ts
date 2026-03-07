@@ -87,11 +87,33 @@ describe("SetInput", () => {
         });
 
         it("shows '...' when not connected after attempting connect", async () => {
+            vi.useFakeTimers();
             mockTvClient.state = "disconnected";
             const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
             expect(ev.action.setTitle).toHaveBeenCalledWith("...");
             expect(mockTvClient.request).not.toHaveBeenCalled();
+            vi.useRealTimers();
+        });
+
+        it("restores the input label after 2 seconds when not connected", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "disconnected";
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1", inputLabel: "PlayStation" });
+            await action.onKeyDown(ev as never);
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("PlayStation");
+            vi.useRealTimers();
+        });
+
+        it("restores the inputId when no inputLabel after 2 seconds", async () => {
+            vi.useFakeTimers();
+            mockTvClient.state = "disconnected";
+            const ev = makeKeyDownEvent({ tvIpAddress: "192.168.1.1", inputId: "HDMI_1" });
+            await action.onKeyDown(ev as never);
+            vi.advanceTimersByTime(2000);
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("HDMI_1");
+            vi.useRealTimers();
         });
 
         it("sends switchInput request when connected", async () => {

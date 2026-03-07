@@ -48,7 +48,7 @@ describe("scanForTVs", () => {
 
         expect(result).toHaveLength(1);
         expect(result[0].ip).toBe("192.168.1.100");
-        expect(result[0].name).toBe("LG TV (192.168.1.100)");
+        expect(result[0].name).toBe("LG TV");
 
         vi.useRealTimers();
     });
@@ -61,7 +61,7 @@ describe("scanForTVs", () => {
         vi.advanceTimersByTime(5000);
         const result = await promise;
 
-        expect(result[0].name).toBe("LG TV (10.0.0.5)");
+        expect(result[0].name).toBe("LG TV");
 
         vi.useRealTimers();
     });

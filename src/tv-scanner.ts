@@ -18,7 +18,7 @@ export function scanForTVs(): Promise<DiscoveredTV[]> {
             const ip = rinfo.address;
             if (!found.has(ip)) {
                 const server = String(headers["SERVER"] ?? headers["server"] ?? "");
-                const name = server.includes("webOS") ? `LG TV (${ip})` : undefined;
+                const name = server.includes("webOS") ? "LG TV" : undefined;
                 found.set(ip, { ip, name });
             }
         });

@@ -18,7 +18,7 @@ export class SetInput extends SingletonAction<SetInputSettings> {
     }
 
     override async onKeyDown(ev: KeyDownEvent<SetInputSettings>): Promise<void> {
-        const { tvIpAddress, inputId } = ev.payload.settings;
+        const { tvIpAddress, inputId, inputLabel } = ev.payload.settings;
 
         if (!inputId) {
             ev.action.setTitle("No input");
@@ -31,6 +31,7 @@ export class SetInput extends SingletonAction<SetInputSettings> {
 
         if (tvClient.state !== "connected") {
             ev.action.setTitle("...");
+            setTimeout(() => ev.action.setTitle(inputLabel ?? inputId), 2000);
             return;
         }
 

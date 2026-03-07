@@ -13,6 +13,8 @@ const STATE_LABELS: Record<ConnectionState, string> = {
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.toggle-tv" })
 export class ToggleTv extends SingletonAction<ToggleTvSettings> {
+    private _stateChangeHandler: ((state: ConnectionState) => void) | null = null;
+
     override onWillAppear(ev: WillAppearEvent<ToggleTvSettings>): void {
         const { tvIpAddress } = ev.payload.settings;
         if (tvIpAddress) {
@@ -20,13 +22,20 @@ export class ToggleTv extends SingletonAction<ToggleTvSettings> {
         }
         ev.action.setTitle(STATE_LABELS[tvClient.state]);
 
-        tvClient.on("stateChange", (state: ConnectionState) => {
+        if (this._stateChangeHandler) {
+            tvClient.off("stateChange", this._stateChangeHandler);
+        }
+        this._stateChangeHandler = (state: ConnectionState) => {
             ev.action.setTitle(STATE_LABELS[state]);
-        });
+        };
+        tvClient.on("stateChange", this._stateChangeHandler);
     }
 
     override onWillDisappear(_ev: WillDisappearEvent<ToggleTvSettings>): void {
-        tvClient.removeAllListeners("stateChange");
+        if (this._stateChangeHandler) {
+            tvClient.off("stateChange", this._stateChangeHandler);
+            this._stateChangeHandler = null;
+        }
     }
 
     override async onKeyDown(ev: KeyDownEvent<ToggleTvSettings>): Promise<void> {

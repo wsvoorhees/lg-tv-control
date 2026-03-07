@@ -11,6 +11,7 @@ const mockTvClient = {
     on: vi.fn((event: string, listener: (state: ConnectionState) => void) => {
         if (event === "stateChange") stateChangeListener = listener;
     }),
+    off: vi.fn(),
     removeAllListeners: vi.fn(),
 };
 
@@ -83,12 +84,26 @@ describe("ToggleTv", () => {
             stateChangeListener!("connected");
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
         });
+
+        it("replaces old listener when onWillAppear is called again", () => {
+            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1" }) as never);
+            const firstListener = stateChangeListener;
+            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1" }) as never);
+            expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", firstListener);
+        });
     });
 
     describe("onWillDisappear", () => {
-        it("removes all stateChange listeners", () => {
+        it("removes only its own stateChange listener", () => {
+            action.onWillAppear(makeWillAppearEvent({ tvIpAddress: "192.168.1.1" }) as never);
+            const listener = stateChangeListener;
             action.onWillDisappear({} as never);
-            expect(mockTvClient.removeAllListeners).toHaveBeenCalledWith("stateChange");
+            expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", listener);
+        });
+
+        it("does nothing if no listener was registered", () => {
+            action.onWillDisappear({} as never);
+            expect(mockTvClient.off).not.toHaveBeenCalled();
         });
     });
 

@@ -7,7 +7,6 @@ import { ToggleTv } from "./actions/toggle-tv";
 import { tvClient } from "./tv-client";
 import { scanForTVs } from "./tv-scanner";
 
-// We can enable "trace" logging so that all messages between the Stream Deck, and the plugin are recorded. When storing sensitive information
 streamDeck.logger.setLevel("trace");
 
 // Register actions.
@@ -21,8 +20,12 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
     const payload = ev.payload as { event?: string };
 
     if (payload.event === "scanForTVs") {
-        const tvs = await scanForTVs();
-        await streamDeck.ui.sendToPropertyInspector({ event: "tvScanResults", tvs });
+        try {
+            const tvs = await scanForTVs();
+            await streamDeck.ui.sendToPropertyInspector({ event: "tvScanResults", tvs });
+        } catch {
+            await streamDeck.ui.sendToPropertyInspector({ event: "tvScanResults", tvs: [] });
+        }
     }
 
     if (payload.event === "getInputList") {

@@ -67,7 +67,10 @@ function initTvSelector() {
     document.getElementById('tv-select').addEventListener('change', (e) => {
         const ip = e.target.value;
         if (ip) {
-            document.getElementById('ip-input').value = ip;
+            // Update the sdpi-textfield's inner input through its shadow DOM
+            const ipInput = document.getElementById('ip-input');
+            const innerInput = ipInput.shadowRoot?.querySelector('input');
+            if (innerInput) innerInput.value = ip;
             $SD.setSettings({ tvIpAddress: ip });
         }
     });
