@@ -2,8 +2,8 @@
     "scripts": {
         "build": "rollup -c",
         "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.will-voorhees.lg-tv-control\"",
-        "test": "vitest run --pool=forks",
-        "test:watch": "vitest --pool=forks"
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "type": "module",
     "devDependencies": {

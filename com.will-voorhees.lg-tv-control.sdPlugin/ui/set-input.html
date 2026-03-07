@@ -26,6 +26,16 @@
     <script>
         const sd = SDPIComponents.streamDeckClient;
 
+        // Show saved input when the PI opens
+        sd.didReceiveSettings.subscribe(({ payload }) => {
+            const { inputId, inputLabel } = payload.settings;
+            if (inputId) {
+                const select = document.getElementById('input-select');
+                select.innerHTML = `<option value="${inputId}">${inputLabel ?? inputId}</option>`;
+                document.getElementById('input-select-item').style.display = '';
+            }
+        });
+
         document.getElementById('fetch-btn').addEventListener('click', () => {
             document.getElementById('input-status').textContent = 'Fetching inputs...';
             sd.send('sendToPlugin', { event: 'getInputList' });
@@ -48,8 +58,13 @@
 
             select.innerHTML = '<option value="">Select an input...</option>';
 
+            if (payload.error === 'not_connected') {
+                status.textContent = 'Not connected to TV.';
+                return;
+            }
+
             if (!payload.inputs || payload.inputs.length === 0) {
-                status.textContent = 'No inputs found. Is the TV connected?';
+                status.textContent = 'No inputs found.';
                 return;
             }
 

@@ -54,6 +54,10 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
     }
 
     if (payload.event === "getInputList") {
+        if (tvClient.state !== "connected") {
+            await streamDeck.ui.sendToPropertyInspector({ event: "inputList", inputs: [], error: "not_connected" });
+            return;
+        }
         try {
             const res = await tvClient.request("ssap://tv/getExternalInputList") as { devices?: { id: string; label: string }[] };
             const inputs = (res?.devices ?? []).map(d => ({ id: d.id, label: d.label }));
@@ -64,6 +68,10 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
     }
 
     if (payload.event === "getAppList") {
+        if (tvClient.state !== "connected") {
+            await streamDeck.ui.sendToPropertyInspector({ event: "appList", apps: [], error: "not_connected" });
+            return;
+        }
         try {
             const res = await tvClient.request("ssap://com.webos.applicationManager/listApps") as { apps?: { id: string; title: string }[] };
             const apps = (res?.apps ?? []).map(a => ({ id: a.id, label: a.title }));

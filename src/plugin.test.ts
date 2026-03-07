@@ -41,6 +41,7 @@ await import("./plugin.js");
 describe("plugin", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        mockTvClient.state = "connected";
     });
 
     describe("onDidReceiveGlobalSettings", () => {
@@ -119,6 +120,17 @@ describe("plugin", () => {
                     inputs: [],
                 });
             });
+
+            it("sends inputList with error flag when TV not connected", async () => {
+                mockTvClient.state = "disconnected";
+                await sendToPluginHandler!({ payload: { event: "getInputList" } });
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith({
+                    event: "inputList",
+                    inputs: [],
+                    error: "not_connected",
+                });
+                expect(mockTvClient.request).not.toHaveBeenCalled();
+            });
         });
 
         describe("getAppList", () => {
@@ -155,6 +167,17 @@ describe("plugin", () => {
                     event: "appList",
                     apps: [],
                 });
+            });
+
+            it("sends appList with error flag when TV not connected", async () => {
+                mockTvClient.state = "disconnected";
+                await sendToPluginHandler!({ payload: { event: "getAppList" } });
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith({
+                    event: "appList",
+                    apps: [],
+                    error: "not_connected",
+                });
+                expect(mockTvClient.request).not.toHaveBeenCalled();
             });
         });
 

@@ -26,6 +26,16 @@
     <script>
         const sd = SDPIComponents.streamDeckClient;
 
+        // Show saved app when the PI opens
+        sd.didReceiveSettings.subscribe(({ payload }) => {
+            const { appId, appLabel } = payload.settings;
+            if (appId) {
+                const select = document.getElementById('app-select');
+                select.innerHTML = `<option value="${appId}">${appLabel ?? appId}</option>`;
+                document.getElementById('app-select-item').style.display = '';
+            }
+        });
+
         document.getElementById('fetch-btn').addEventListener('click', () => {
             document.getElementById('app-status').textContent = 'Fetching apps...';
             sd.send('sendToPlugin', { event: 'getAppList' });
@@ -48,8 +58,13 @@
 
             select.innerHTML = '<option value="">Select an app...</option>';
 
+            if (payload.error === 'not_connected') {
+                status.textContent = 'Not connected to TV.';
+                return;
+            }
+
             if (!payload.apps || payload.apps.length === 0) {
-                status.textContent = 'No apps found. Is the TV connected?';
+                status.textContent = 'No apps found.';
                 return;
             }
 

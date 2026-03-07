@@ -215,7 +215,7 @@
 	"Category": "LG TV Control",
 	"CategoryIcon": "imgs/plugin/category-icon",
 	"CodePath": "bin/plugin.js",
-	"Description": "Allows you to Control your LG WebOS Tv using your Stream Deck",
+	"Description": "Control your LG webOS TV using your Stream Deck",
 	"Icon": "imgs/plugin/marketplace",
 	"SDKVersion": 3,
 	"Software": {
