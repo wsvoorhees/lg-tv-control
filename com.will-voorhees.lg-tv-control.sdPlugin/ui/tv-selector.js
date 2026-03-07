@@ -143,17 +143,25 @@ function initTvSelector() {
     ipInput.addEventListener('change', saveSettings);
     nameInput.addEventListener('change', saveSettings);
 
+    let connectionState = 'disconnected';
+
     connectBtn.addEventListener('click', () => {
-        sd.send('sendToPlugin', { event: 'connect', ip: ipInput.value.trim() });
+        if (connectionState === 'connected') {
+            sd.send('sendToPlugin', { event: 'connect' });
+        } else {
+            sd.send('sendToPlugin', { event: 'connect', ip: ipInput.value.trim() });
+        }
     });
 
     function updateConnectionIndicator(state) {
+        connectionState = state;
         const dot = document.getElementById('connection-dot');
         const text = document.getElementById('connection-text');
         dot.className = `tv-connection-dot ${state}`;
         text.textContent = state === 'connected' ? 'Connected'
             : state === 'connecting' ? 'Connecting...'
             : 'Disconnected';
+        connectBtn.textContent = state === 'connected' ? 'Disconnect' : 'Connect';
     }
 
     // Request current connection state on load.

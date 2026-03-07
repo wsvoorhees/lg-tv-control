@@ -84,6 +84,13 @@ describe("plugin", () => {
                 expect(mockTvClient.disconnect).toHaveBeenCalled();
                 expect(mockTvClient.connect).not.toHaveBeenCalled();
             });
+
+            it("calls tvClient.disconnect() when the Disconnect button is clicked (no ip field)", async () => {
+                // The UI sends { event: 'connect' } with no ip when the button reads 'Disconnect'
+                await handlers.sendToPlugin!({ payload: { event: "connect" } });
+                expect(mockTvClient.disconnect).toHaveBeenCalled();
+                expect(mockTvClient.connect).not.toHaveBeenCalled();
+            });
         });
 
         describe("getConnectionState", () => {
