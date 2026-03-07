@@ -13,7 +13,6 @@ const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = 
     // Container for handlers captured by plugin.ts at load time
     handlers: {
         sendToPlugin: null as ((ev: { payload: unknown }) => Promise<void>) | null,
-        globalSettings: null as ((ev: { settings: Record<string, unknown> }) => void) | null,
     },
 }));
 
@@ -27,7 +26,6 @@ vi.mock("@elgato/streamdeck", () => ({
         },
         connect: vi.fn().mockResolvedValue(undefined),
         settings: {
-            onDidReceiveGlobalSettings: vi.fn((handler) => { handlers.globalSettings = handler; }),
             getGlobalSettings: vi.fn(),
         },
     },
@@ -46,27 +44,55 @@ describe("plugin", () => {
         mockTvClient.state = "connected";
     });
 
-    describe("onDidReceiveGlobalSettings", () => {
-        it("calls tvClient.connect() with the IP when tvIpAddress is set", () => {
-            handlers.globalSettings!({ settings: { tvIpAddress: "192.168.1.1" } });
-            expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
-            expect(mockTvClient.disconnect).not.toHaveBeenCalled();
-        });
-
-        it("calls tvClient.disconnect() when tvIpAddress is absent", () => {
-            handlers.globalSettings!({ settings: {} });
-            expect(mockTvClient.disconnect).toHaveBeenCalled();
-            expect(mockTvClient.connect).not.toHaveBeenCalled();
-        });
-
-        it("calls tvClient.disconnect() when tvIpAddress is empty string", () => {
-            handlers.globalSettings!({ settings: { tvIpAddress: "" } });
-            expect(mockTvClient.disconnect).toHaveBeenCalled();
-            expect(mockTvClient.connect).not.toHaveBeenCalled();
-        });
-    });
-
     describe("onSendToPlugin", () => {
+        describe("connect", () => {
+            it("calls tvClient.connect() with the provided IP", async () => {
+                await handlers.sendToPlugin!({ payload: { event: "connect", ip: "192.168.1.1" } });
+                expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
+                expect(mockTvClient.disconnect).not.toHaveBeenCalled();
+            });
+
+            it("calls tvClient.disconnect() when IP is absent", async () => {
+                await handlers.sendToPlugin!({ payload: { event: "connect" } });
+                expect(mockTvClient.disconnect).toHaveBeenCalled();
+                expect(mockTvClient.connect).not.toHaveBeenCalled();
+            });
+
+            it("calls tvClient.disconnect() when IP is empty string", async () => {
+                await handlers.sendToPlugin!({ payload: { event: "connect", ip: "" } });
+                expect(mockTvClient.disconnect).toHaveBeenCalled();
+                expect(mockTvClient.connect).not.toHaveBeenCalled();
+            });
+        });
+
+        describe("getConnectionState", () => {
+            it("sends connectionState with current state when connected", async () => {
+                mockTvClient.state = "connected";
+                await handlers.sendToPlugin!({ payload: { event: "getConnectionState" } });
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith({
+                    event: "connectionState",
+                    state: "connected",
+                });
+            });
+
+            it("sends connectionState with current state when disconnected", async () => {
+                mockTvClient.state = "disconnected";
+                await handlers.sendToPlugin!({ payload: { event: "getConnectionState" } });
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith({
+                    event: "connectionState",
+                    state: "disconnected",
+                });
+            });
+
+            it("sends connectionState with current state when connecting", async () => {
+                mockTvClient.state = "connecting";
+                await handlers.sendToPlugin!({ payload: { event: "getConnectionState" } });
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith({
+                    event: "connectionState",
+                    state: "connecting",
+                });
+            });
+        });
         describe("scanForTVs", () => {
             it("sends tvScanResults with found TVs on success", async () => {
                 mockScanForTVs.mockResolvedValue([{ ip: "192.168.1.1" }]);

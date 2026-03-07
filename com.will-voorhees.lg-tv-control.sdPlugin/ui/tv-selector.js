@@ -23,15 +23,18 @@ if (tvSelectorRoot) {
             <sdpi-item label="IP Address">
                 <input id="ip-input" type="text" placeholder="192.168.1.x">
             </sdpi-item>
+            <sdpi-item>
+                <button id="connect-btn" class="pi-btn">Connect</button>
+            </sdpi-item>
         </div>
-        <sdpi-item label="Scan">
-            <button id="scan-btn" class="pi-btn">Scan for TVs</button>
-            <p id="scan-status" class="pi-status"></p>
-        </sdpi-item>
         <sdpi-item label="Found TVs" id="tv-list-item">
             <sdpi-select id="tv-select">
                 <option value="">Select a TV...</option>
             </sdpi-select>
+        </sdpi-item>
+        <sdpi-item>
+            <button id="scan-btn" class="pi-btn">Scan for TVs</button>
+            <p id="scan-status" class="pi-status"></p>
         </sdpi-item>
     `;
 }
@@ -117,6 +120,7 @@ function initTvSelector() {
     const sd = SDPIComponents.streamDeckClient;
     const ipInput = document.getElementById('ip-input');
     const nameInput = document.getElementById('name-input');
+    const connectBtn = document.getElementById('connect-btn');
     const scanBtn = document.getElementById('scan-btn');
 
     let scanTimeout = null;
@@ -138,6 +142,10 @@ function initTvSelector() {
 
     ipInput.addEventListener('change', saveSettings);
     nameInput.addEventListener('change', saveSettings);
+
+    connectBtn.addEventListener('click', () => {
+        sd.send('sendToPlugin', { event: 'connect', ip: ipInput.value.trim() });
+    });
 
     function updateConnectionIndicator(state) {
         const dot = document.getElementById('connection-dot');

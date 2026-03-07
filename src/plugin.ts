@@ -18,13 +18,6 @@ import { scanForTVs } from "./tv-scanner";
 
 streamDeck.logger.setLevel("info");
 
-// Connect to TV when global settings change (user sets IP in property inspector).
-streamDeck.settings.onDidReceiveGlobalSettings<{ tvIpAddress?: string }>(ev => {
-    const { tvIpAddress } = ev.settings;
-    if (tvIpAddress) tvClient.connect(tvIpAddress);
-    else tvClient.disconnect();
-});
-
 // Register actions.
 streamDeck.actions.registerAction(new PowerOn());
 streamDeck.actions.registerAction(new SetInput());
@@ -53,6 +46,12 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
 
     if (payload.event === "getConnectionState") {
         await streamDeck.ui.sendToPropertyInspector({ event: "connectionState", state: tvClient.state });
+    }
+
+    if (payload.event === "connect") {
+        const { ip } = payload as { ip?: string };
+        if (ip) tvClient.connect(ip);
+        else tvClient.disconnect();
     }
 
     if (payload.event === "scanForTVs") {
