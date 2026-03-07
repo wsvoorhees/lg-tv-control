@@ -1,12 +1,8 @@
 /**
- * Shared TV IP selector logic.
+ * Shared TV selector component.
  *
- * Expects the following elements in the host HTML:
- *   #ip-input       - plain <input type="text"> for the TV IP address (global setting)
- *   #scan-btn       - <button> that triggers a network scan
- *   #tv-list-item   - sdpi-item wrapping the scan results dropdown (hidden by default)
- *   #tv-select      - sdpi-select populated with discovered TVs
- *   #scan-status    - p.pi-status for scan status text
+ * Injects TV IP address input, scan button, and found TVs dropdown into
+ * a #tv-selector-root placeholder element in the host HTML.
  */
 
 // Inject TV selector HTML into the placeholder div
