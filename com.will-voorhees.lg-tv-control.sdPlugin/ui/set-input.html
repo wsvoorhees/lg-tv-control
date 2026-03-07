@@ -13,6 +13,20 @@
     </sdpi-item>
 
     <sdpi-item label=" ">
+        <sdpi-button id="scan-btn" value="Scan for TVs"></sdpi-button>
+    </sdpi-item>
+
+    <sdpi-item label="Found TVs" id="tv-list-item" style="display: none">
+        <sdpi-select id="tv-select">
+            <option value="">Select a TV...</option>
+        </sdpi-select>
+    </sdpi-item>
+
+    <sdpi-item label=" ">
+        <span id="scan-status" style="font-size: 11px; opacity: 0.7;"></span>
+    </sdpi-item>
+
+    <sdpi-item label=" " style="margin-top: 8px">
         <sdpi-button id="fetch-btn" value="Fetch Inputs from TV"></sdpi-button>
     </sdpi-item>
 
@@ -23,12 +37,13 @@
     </sdpi-item>
 
     <sdpi-item label=" ">
-        <span id="status" style="font-size: 11px; opacity: 0.7;"></span>
+        <span id="input-status" style="font-size: 11px; opacity: 0.7;"></span>
     </sdpi-item>
 
+    <script src="tv-selector.js"></script>
     <script>
         document.getElementById('fetch-btn').addEventListener('click', () => {
-            document.getElementById('status').textContent = 'Fetching inputs...';
+            document.getElementById('input-status').textContent = 'Fetching inputs...';
             $SD.sendToPlugin({ event: 'getInputList' });
         });
 
@@ -45,7 +60,7 @@
             if (payload.event !== 'inputList') return;
 
             const select = document.getElementById('input-select');
-            const status = document.getElementById('status');
+            const status = document.getElementById('input-status');
 
             select.innerHTML = '<option value="">Select an input...</option>';
 
