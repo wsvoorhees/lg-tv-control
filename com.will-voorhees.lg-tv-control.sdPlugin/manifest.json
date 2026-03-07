@@ -20,6 +20,22 @@
 			]
 		},
 		{
+			"Name": "Set Input",
+			"UUID": "com.will-voorhees.lg-tv-control.set-input",
+			"Icon": "imgs/actions/counter/icon",
+			"Tooltip": "Switches the TV to a specific input.",
+			"PropertyInspectorPath": "ui/set-input.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/counter/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
 			"Name": "Counter",
 			"UUID": "com.will-voorhees.lg-tv-control.increment",
 			"Icon": "imgs/actions/counter/icon",

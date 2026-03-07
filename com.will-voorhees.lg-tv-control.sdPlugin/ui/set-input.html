@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>Set Input</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
+</head>
+
+<body>
+    <sdpi-item label="TV IP Address">
+        <sdpi-textfield id="ip-input" setting="tvIpAddress" placeholder="192.168.1.x"></sdpi-textfield>
+    </sdpi-item>
+
+    <sdpi-item label=" ">
+        <sdpi-button id="fetch-btn" value="Fetch Inputs from TV"></sdpi-button>
+    </sdpi-item>
+
+    <sdpi-item label="Input" id="input-select-item">
+        <sdpi-select id="input-select" setting="inputId">
+            <option value="">Select an input...</option>
+        </sdpi-select>
+    </sdpi-item>
+
+    <sdpi-item label=" ">
+        <span id="status" style="font-size: 11px; opacity: 0.7;"></span>
+    </sdpi-item>
+
+    <script>
+        document.getElementById('fetch-btn').addEventListener('click', () => {
+            document.getElementById('status').textContent = 'Fetching inputs...';
+            $SD.sendToPlugin({ event: 'getInputList' });
+        });
+
+        document.getElementById('input-select').addEventListener('change', (e) => {
+            const inputId = e.target.value;
+            const option = e.target.selectedOptions[0];
+            const inputLabel = option ? option.textContent.trim() : inputId;
+            if (inputId) {
+                $SD.setSettings({ inputId, inputLabel });
+            }
+        });
+
+        $SD.on('sendToPropertyInspector', ({ payload }) => {
+            if (payload.event !== 'inputList') return;
+
+            const select = document.getElementById('input-select');
+            const status = document.getElementById('status');
+
+            select.innerHTML = '<option value="">Select an input...</option>';
+
+            if (!payload.inputs || payload.inputs.length === 0) {
+                status.textContent = 'No inputs found. Is the TV connected?';
+                return;
+            }
+
+            payload.inputs.forEach(input => {
+                const option = document.createElement('option');
+                option.value = input.id;
+                option.textContent = input.label ?? input.id;
+                select.appendChild(option);
+            });
+
+            status.textContent = `Found ${payload.inputs.length} input(s).`;
+        });
+    </script>
+</body>
+
+</html>
