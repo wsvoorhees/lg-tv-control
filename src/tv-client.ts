@@ -5,7 +5,7 @@ export type ConnectionState = "disconnected" | "connecting" | "connected";
 
 type LgtvInstance = ReturnType<typeof lgtv2>;
 
-class TvClient extends EventEmitter {
+export class TvClient extends EventEmitter {
     private client: LgtvInstance | null = null;
     private _state: ConnectionState = "disconnected";
     private _ip: string | null = null;

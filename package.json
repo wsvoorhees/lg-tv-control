@@ -1,7 +1,9 @@
 {
     "scripts": {
         "build": "rollup -c",
-        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.will-voorhees.lg-tv-control\""
+        "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.will-voorhees.lg-tv-control\"",
+        "test": "vitest run",
+        "test:watch": "vitest"
     },
     "type": "module",
     "devDependencies": {
@@ -16,7 +18,8 @@
         "@types/node-ssdp": "^4.0.5",
         "rollup": "^4.0.2",
         "tslib": "^2.6.2",
-        "typescript": "^5.2.2"
+        "typescript": "^5.2.2",
+        "vitest": "^4.0.18"
     },
     "dependencies": {
         "@elgato/streamdeck": "^2.0.0",
