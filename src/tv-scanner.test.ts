@@ -26,7 +26,7 @@ describe("scanForTVs", () => {
         vi.useFakeTimers();
 
         const promise = scanForTVs();
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(6000);
         const result = await promise;
 
         expect(result).toEqual([]);
@@ -43,7 +43,7 @@ describe("scanForTVs", () => {
         // Simulate a device responding
         mockClientInstance.emit("response", { SERVER: "Linux/4.x webOS/5.0" }, 200, { address: "192.168.1.100" });
 
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(6000);
         const result = await promise;
 
         expect(result).toHaveLength(1);
@@ -58,7 +58,7 @@ describe("scanForTVs", () => {
 
         const promise = scanForTVs();
         mockClientInstance.emit("response", { SERVER: "webOS/3.4" }, 200, { address: "10.0.0.5" });
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(6000);
         const result = await promise;
 
         expect(result[0].name).toBe("LG TV");
@@ -71,7 +71,7 @@ describe("scanForTVs", () => {
 
         const promise = scanForTVs();
         mockClientInstance.emit("response", { SERVER: "UPnP/1.0 SomeOtherDevice/1.0" }, 200, { address: "10.0.0.6" });
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(6000);
         const result = await promise;
 
         expect(result[0].name).toBeUndefined();
@@ -85,7 +85,7 @@ describe("scanForTVs", () => {
         const promise = scanForTVs();
         mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.50" });
         mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.50" });
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(6000);
         const result = await promise;
 
         expect(result).toHaveLength(1);
@@ -99,7 +99,7 @@ describe("scanForTVs", () => {
         const promise = scanForTVs();
         mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.10" });
         mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.11" });
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(6000);
         const result = await promise;
 
         expect(result).toHaveLength(2);
@@ -113,7 +113,7 @@ describe("scanForTVs", () => {
         vi.useFakeTimers();
 
         const promise = scanForTVs();
-        vi.advanceTimersByTime(5000);
+        vi.advanceTimersByTime(6000);
         await promise;
 
         expect(mockClientInstance.search).toHaveBeenCalledWith("urn:dial-multiscreen-org:service:dial:1");

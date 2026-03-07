@@ -9,24 +9,28 @@ const STATE_LABELS: Record<ConnectionState, string> = {
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.toggle-power" })
 export class TogglePower extends SingletonAction {
-    private _stateChangeHandler: ((state: ConnectionState) => void) | null = null;
+    private _stateChangeHandlers = new Map<string, (state: ConnectionState) => void>();
 
     override onWillAppear(ev: WillAppearEvent): void {
+        const id = ev.action.id;
         ev.action.setTitle(STATE_LABELS[tvClient.state]);
 
-        if (this._stateChangeHandler) {
-            tvClient.off("stateChange", this._stateChangeHandler);
-        }
-        this._stateChangeHandler = (state: ConnectionState) => {
+        const existing = this._stateChangeHandlers.get(id);
+        if (existing) tvClient.off("stateChange", existing);
+
+        const handler = (state: ConnectionState) => {
             ev.action.setTitle(STATE_LABELS[state]);
         };
-        tvClient.on("stateChange", this._stateChangeHandler);
+        this._stateChangeHandlers.set(id, handler);
+        tvClient.on("stateChange", handler);
     }
 
-    override onWillDisappear(_ev: WillDisappearEvent): void {
-        if (this._stateChangeHandler) {
-            tvClient.off("stateChange", this._stateChangeHandler);
-            this._stateChangeHandler = null;
+    override onWillDisappear(ev: WillDisappearEvent): void {
+        const id = ev.action.id;
+        const handler = this._stateChangeHandlers.get(id);
+        if (handler) {
+            tvClient.off("stateChange", handler);
+            this._stateChangeHandlers.delete(id);
         }
     }
 

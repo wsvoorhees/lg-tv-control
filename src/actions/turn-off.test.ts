@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ConnectionState } from "../tv-client.js";
 
-let stateChangeListener: ((state: ConnectionState) => void) | null = null;
+let stateChangeListeners: ((state: ConnectionState) => void)[] = [];
 
 const mockTvClient = {
     state: "disconnected" as ConnectionState,
     request: vi.fn(),
     on: vi.fn((event: string, listener: (state: ConnectionState) => void) => {
-        if (event === "stateChange") stateChangeListener = listener;
+        if (event === "stateChange") stateChangeListeners.push(listener);
     }),
     off: vi.fn(),
 };
@@ -21,12 +21,8 @@ vi.mock("@elgato/streamdeck", () => ({
 
 const { TurnOff } = await import("./turn-off.js");
 
-function makeMockAction() {
-    return { setTitle: vi.fn() };
-}
-
-function makeWillAppearEvent() {
-    return { action: makeMockAction() };
+function makeWillAppearEvent(id = "action-id") {
+    return { action: { id, setTitle: vi.fn() } };
 }
 
 describe("TurnOff", () => {
@@ -34,7 +30,7 @@ describe("TurnOff", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        stateChangeListener = null;
+        stateChangeListeners = [];
         mockTvClient.state = "disconnected";
         action = new TurnOff();
     });
@@ -64,28 +60,39 @@ describe("TurnOff", () => {
         it("updates title when state changes after appearing", () => {
             const ev = makeWillAppearEvent();
             action.onWillAppear(ev as never);
-            stateChangeListener!("connected");
+            stateChangeListeners[0]("connected");
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
         });
 
-        it("replaces old listener when onWillAppear is called again", () => {
-            action.onWillAppear(makeWillAppearEvent() as never);
-            const firstListener = stateChangeListener;
-            action.onWillAppear(makeWillAppearEvent() as never);
+        it("replaces old listener when onWillAppear is called again for same instance", () => {
+            action.onWillAppear(makeWillAppearEvent("same-id") as never);
+            const firstListener = stateChangeListeners[0];
+            action.onWillAppear(makeWillAppearEvent("same-id") as never);
             expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", firstListener);
+        });
+
+        it("tracks separate listeners for multiple visible instances", () => {
+            const ev1 = makeWillAppearEvent("id-1");
+            const ev2 = makeWillAppearEvent("id-2");
+            action.onWillAppear(ev1 as never);
+            action.onWillAppear(ev2 as never);
+            expect(mockTvClient.off).not.toHaveBeenCalled();
+            stateChangeListeners.forEach(l => l("connected"));
+            expect(ev1.action.setTitle).toHaveBeenLastCalledWith("On");
+            expect(ev2.action.setTitle).toHaveBeenLastCalledWith("On");
         });
     });
 
     describe("onWillDisappear", () => {
         it("removes only its own stateChange listener", () => {
-            action.onWillAppear(makeWillAppearEvent() as never);
-            const listener = stateChangeListener;
-            action.onWillDisappear({} as never);
+            action.onWillAppear(makeWillAppearEvent("action-id") as never);
+            const listener = stateChangeListeners[0];
+            action.onWillDisappear({ action: { id: "action-id" } } as never);
             expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", listener);
         });
 
-        it("does nothing if no listener was registered", () => {
-            action.onWillDisappear({} as never);
+        it("does nothing if no listener was registered for the given id", () => {
+            action.onWillDisappear({ action: { id: "unknown-id" } } as never);
             expect(mockTvClient.off).not.toHaveBeenCalled();
         });
     });

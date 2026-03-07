@@ -7,7 +7,7 @@ export type DiscoveredTV = {
 };
 
 const LG_WEBOS_ST = "urn:dial-multiscreen-org:service:dial:1";
-const SCAN_TIMEOUT_MS = 5000;
+const SCAN_TIMEOUT_MS = 6000;
 
 export function scanForTVs(): Promise<DiscoveredTV[]> {
     return new Promise((resolve) => {
