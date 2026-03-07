@@ -48,20 +48,21 @@ style.textContent = `
 document.head.appendChild(style);
 
 function initTvSelector() {
+    const sd = SDPIComponents.streamDeckClient;
     const ipInput = document.getElementById('ip-input');
     const scanBtn = document.getElementById('scan-btn');
 
     let scanTimeout = null;
 
     // Load saved global IP address into the input field.
-    $SD.onDidReceiveGlobalSettings(({ settings }) => {
-        if (settings.tvIpAddress) ipInput.value = settings.tvIpAddress;
+    sd.didReceiveGlobalSettings.subscribe(({ payload }) => {
+        if (payload.settings.tvIpAddress) ipInput.value = payload.settings.tvIpAddress;
     });
-    $SD.getGlobalSettings();
+    sd.getGlobalSettings();
 
     // Save the IP address to global settings when the user edits it.
     ipInput.addEventListener('change', () => {
-        $SD.setGlobalSettings({ tvIpAddress: ipInput.value.trim() });
+        sd.setGlobalSettings({ tvIpAddress: ipInput.value.trim() });
     });
 
     function resetScanBtn() {
@@ -78,7 +79,7 @@ function initTvSelector() {
         scanBtn.disabled = true;
         document.getElementById('tv-list-item').style.display = 'none';
         document.getElementById('scan-status').textContent = '';
-        $SD.sendToPlugin({ event: 'scanForTVs' });
+        sd.send('sendToPlugin', { event: 'scanForTVs' });
 
         scanTimeout = setTimeout(() => {
             resetScanBtn();
@@ -90,11 +91,11 @@ function initTvSelector() {
         const ip = e.target.value;
         if (ip) {
             ipInput.value = ip;
-            $SD.setGlobalSettings({ tvIpAddress: ip });
+            sd.setGlobalSettings({ tvIpAddress: ip });
         }
     });
 
-    $SD.on('sendToPropertyInspector', ({ payload }) => {
+    sd.sendToPropertyInspector.subscribe(({ payload }) => {
         if (payload.event !== 'tvScanResults') return;
 
         const select = document.getElementById('tv-select');

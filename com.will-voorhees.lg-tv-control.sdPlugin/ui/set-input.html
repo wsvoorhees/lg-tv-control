@@ -38,9 +38,11 @@
 
     <script src="tv-selector.js"></script>
     <script>
+        const sd = SDPIComponents.streamDeckClient;
+
         document.getElementById('fetch-btn').addEventListener('click', () => {
             document.getElementById('input-status').textContent = 'Fetching inputs...';
-            $SD.sendToPlugin({ event: 'getInputList' });
+            sd.send('sendToPlugin', { event: 'getInputList' });
         });
 
         document.getElementById('input-select').addEventListener('change', (e) => {
@@ -48,11 +50,11 @@
             const option = e.target.selectedOptions[0];
             const inputLabel = option ? option.textContent.trim() : inputId;
             if (inputId) {
-                $SD.setSettings({ inputId, inputLabel });
+                sd.setSettings({ inputId, inputLabel });
             }
         });
 
-        $SD.on('sendToPropertyInspector', ({ payload }) => {
+        sd.sendToPropertyInspector.subscribe(({ payload }) => {
             if (payload.event !== 'inputList') return;
 
             const select = document.getElementById('input-select');
