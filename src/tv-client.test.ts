@@ -12,9 +12,10 @@ function makeMockLgtvInstance() {
     return emitter;
 }
 
-const { mockLgtv2 } = vi.hoisted(() => ({ mockLgtv2: vi.fn() }));
+const { mockLgtv2, mockWake } = vi.hoisted(() => ({ mockLgtv2: vi.fn(), mockWake: vi.fn() }));
 
 vi.mock("lgtv2", () => ({ default: mockLgtv2 }));
+vi.mock("wol", () => ({ wake: mockWake }));
 
 import { TvClient } from "./tv-client.js";
 
@@ -277,6 +278,85 @@ describe("TvClient", () => {
             // state is "connecting", same IP — connect() guard returns early
             client.reconnect();
             expect(mockLgtv2).toHaveBeenCalledTimes(1);
+        });
+    });
+
+    describe("waitForConnected()", () => {
+        it("resolves immediately when already connected", async () => {
+            client.connect("192.168.1.1");
+            mockLgtvInstance.emit("connect");
+            await expect(client.waitForConnected()).resolves.toBeUndefined();
+        });
+
+        it("rejects immediately when disconnected and not connecting", async () => {
+            await expect(client.waitForConnected()).rejects.toThrow("Not connecting");
+        });
+
+        it("resolves when state transitions to connected", async () => {
+            client.connect("192.168.1.1");
+            const promise = client.waitForConnected();
+            mockLgtvInstance.emit("connect");
+            await expect(promise).resolves.toBeUndefined();
+        });
+
+        it("rejects with 'Connection aborted' when disconnect() is called while waiting", async () => {
+            client.connect("192.168.1.1");
+            const promise = client.waitForConnected();
+            client.disconnect();
+            await expect(promise).rejects.toThrow("Connection aborted");
+        });
+
+        it("does not reject on transient disconnect during a lgtv2 retry cycle", async () => {
+            client.connect("192.168.1.1");
+            const promise = client.waitForConnected();
+            // Simulate lgtv2 retry: close (same connectionId) → reconnecting → connected
+            mockLgtvInstance.emit("close");
+            mockLgtvInstance.emit("connecting");
+            mockLgtvInstance.emit("connect");
+            await expect(promise).resolves.toBeUndefined();
+        });
+
+        it("rejects on timeout", async () => {
+            vi.useFakeTimers();
+            client.connect("192.168.1.1");
+            const promise = client.waitForConnected(5000);
+            vi.advanceTimersByTime(5000);
+            await expect(promise).rejects.toThrow("Connection timeout");
+            vi.useRealTimers();
+        });
+    });
+
+    describe("connect timeout", () => {
+        it("emits 'disconnected' after 10s if still connecting (before max attempts)", () => {
+            vi.useFakeTimers();
+            const listener = vi.fn();
+            client.on("stateChange", listener);
+            client.connect("192.168.1.1");
+            listener.mockClear();
+            vi.advanceTimersByTime(10000);
+            expect(client.state).toBe("disconnected");
+            expect(listener).toHaveBeenCalledWith("disconnected");
+            vi.useRealTimers();
+        });
+    });
+
+    describe("wakeOnLan()", () => {
+        it("does nothing when no MAC address is configured", async () => {
+            await client.wakeOnLan();
+            expect(mockWake).not.toHaveBeenCalled();
+        });
+
+        it("calls wake() with the MAC address", async () => {
+            mockWake.mockResolvedValue(true);
+            client.connect("192.168.1.1", "AA:BB:CC:DD:EE:FF");
+            await client.wakeOnLan();
+            expect(mockWake).toHaveBeenCalledWith("AA:BB:CC:DD:EE:FF");
+        });
+
+        it("does not throw when wake() fails", async () => {
+            mockWake.mockRejectedValue(new Error("WOL failed"));
+            client.connect("192.168.1.1", "AA:BB:CC:DD:EE:FF");
+            await expect(client.wakeOnLan()).resolves.toBeUndefined();
         });
     });
 });
