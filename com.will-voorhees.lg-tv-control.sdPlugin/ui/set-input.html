@@ -8,50 +8,102 @@
 </head>
 
 <body>
+    <sdpi-item label="TV">
+        <sdpi-select id="tv-picker">
+            <option value="">Default TV</option>
+        </sdpi-select>
+    </sdpi-item>
+
     <sdpi-item label="Input">
         <button id="fetch-btn" class="pi-btn">Fetch Inputs from TV</button>
     </sdpi-item>
 
     <sdpi-item label="Select" id="input-select-item" style="display: none">
-        <sdpi-select id="input-select" setting="inputId">
+        <sdpi-select id="input-select">
             <option value="">Select an input...</option>
         </sdpi-select>
     </sdpi-item>
 
     <p id="input-status" class="pi-status"></p>
 
-    <div id="tv-selector-root"></div>
+    <style>
+        .pi-btn {
+            display: block;
+            width: 100%;
+            padding: 5px 10px;
+            background: var(--sdpi-background, #2d2d2d);
+            color: var(--sdpi-color, #d8d8d8);
+            border: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+        }
+        .pi-btn:hover { filter: brightness(1.2); }
+        .pi-status {
+            margin: 2px 0 4px 0;
+            padding: 0 6px;
+            font-size: 11px;
+            opacity: 0.7;
+            min-height: 14px;
+            color: #ffffff;
+        }
+    </style>
 
-    <script src="tv-selector.js"></script>
     <script>
         const sd = SDPIComponents.streamDeckClient;
 
-        // Show saved input when the PI opens
+        let currentSettings = {};
+        let inputLabelMap = {};
+
+        // Load saved settings when PI opens
         sd.didReceiveSettings.subscribe(({ payload }) => {
-            const { inputId, inputLabel } = payload.settings;
+            currentSettings = { ...payload.settings };
+            const { inputId, inputLabel } = currentSettings;
             if (inputId) {
                 const select = document.getElementById('input-select');
                 select.innerHTML = `<option value="${inputId}">${inputLabel ?? inputId}</option>`;
                 document.getElementById('input-select-item').style.display = '';
             }
+            // TV picker will be restored when tvList arrives
+        });
+
+        // Request TV list for the picker
+        sd.send('sendToPlugin', { event: 'getTvList' });
+
+        document.getElementById('tv-picker').addEventListener('change', (e) => {
+            currentSettings = { ...currentSettings, tvId: e.target.value || undefined };
+            sd.setSettings(currentSettings);
         });
 
         document.getElementById('fetch-btn').addEventListener('click', () => {
             document.getElementById('input-status').textContent = 'Fetching inputs...';
-            sd.send('sendToPlugin', { event: 'getInputList' });
+            sd.send('sendToPlugin', { event: 'getInputList', tvId: currentSettings.tvId });
         });
-
-        let inputLabelMap = {};
 
         document.getElementById('input-select').addEventListener('change', (e) => {
             const inputId = e.target.value;
             const inputLabel = inputLabelMap[inputId] ?? inputId;
             if (inputId) {
-                sd.setSettings({ inputId, inputLabel });
+                currentSettings = { ...currentSettings, inputId, inputLabel };
+                sd.setSettings(currentSettings);
             }
         });
 
         sd.sendToPropertyInspector.subscribe(({ payload }) => {
+            if (payload.event === 'tvList') {
+                const picker = document.getElementById('tv-picker');
+                picker.innerHTML = '<option value="">Default TV</option>';
+                (payload.tvs ?? []).forEach(tv => {
+                    const opt = document.createElement('option');
+                    opt.value = tv.id;
+                    opt.textContent = tv.name;
+                    picker.appendChild(opt);
+                });
+                picker.value = currentSettings.tvId ?? '';
+                return;
+            }
+
             if (payload.event !== 'inputList') return;
 
             const select = document.getElementById('input-select');

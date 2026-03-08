@@ -9,7 +9,15 @@ const mockTvClient = vi.hoisted(() => ({
     waitForConnected: vi.fn(),
 }));
 
-vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
+vi.mock("../tv-client-pool.js", () => ({
+    tvClientPool: {
+        get: vi.fn().mockReturnValue(mockTvClient),
+        getDefault: vi.fn().mockReturnValue(mockTvClient),
+        getDefaultId: vi.fn().mockReturnValue("default-id"),
+        on: vi.fn(),
+        off: vi.fn(),
+    },
+}));
 
 vi.mock("@elgato/streamdeck", () => ({
     action: () => (cls: unknown) => cls,

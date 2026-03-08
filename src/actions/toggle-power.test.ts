@@ -1,22 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { ConnectionState } from "../tv-client.js";
 
-const { mockTvClient, stateChangeListeners } = vi.hoisted(() => {
-    const stateChangeListeners: ((state: ConnectionState) => void)[] = [];
+const { mockTvClient, mockTvClientPool, poolStateChangeListeners } = vi.hoisted(() => {
+    const poolStateChangeListeners: ((id: string, state: ConnectionState) => void)[] = [];
     const mockTvClient = {
         state: "disconnected" as ConnectionState,
         reconnect: vi.fn(),
         wakeOnLan: vi.fn(),
         request: vi.fn(),
-        on: vi.fn((event: string, listener: (state: ConnectionState) => void) => {
-            if (event === "stateChange") stateChangeListeners.push(listener);
+        on: vi.fn(),
+        off: vi.fn(),
+    };
+    const mockTvClientPool = {
+        get: vi.fn().mockReturnValue(mockTvClient),
+        getDefault: vi.fn().mockReturnValue(mockTvClient),
+        getDefaultId: vi.fn().mockReturnValue("default-id"),
+        on: vi.fn((event: string, listener: (id: string, state: ConnectionState) => void) => {
+            if (event === "stateChange") poolStateChangeListeners.push(listener);
         }),
         off: vi.fn(),
     };
-    return { mockTvClient, stateChangeListeners };
+    return { mockTvClient, mockTvClientPool, poolStateChangeListeners };
 });
 
-vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
+vi.mock("../tv-client-pool.js", () => ({ tvClientPool: mockTvClientPool }));
 
 vi.mock("@elgato/streamdeck", () => ({
     action: () => (cls: unknown) => cls,
@@ -26,7 +33,7 @@ vi.mock("@elgato/streamdeck", () => ({
 import { TogglePower } from "./toggle-power.js";
 
 function makeWillAppearEvent(id = "action-id") {
-    return { action: { id, setTitle: vi.fn() } };
+    return { action: { id, setTitle: vi.fn() }, payload: { settings: {} } };
 }
 
 describe("TogglePower", () => {
@@ -34,8 +41,14 @@ describe("TogglePower", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        stateChangeListeners.length = 0;
+        poolStateChangeListeners.length = 0;
         mockTvClient.state = "disconnected";
+        mockTvClientPool.getDefault.mockReturnValue(mockTvClient);
+        mockTvClientPool.get.mockReturnValue(mockTvClient);
+        mockTvClientPool.getDefaultId.mockReturnValue("default-id");
+        mockTvClientPool.on.mockImplementation((event: string, listener: (id: string, state: ConnectionState) => void) => {
+            if (event === "stateChange") poolStateChangeListeners.push(listener);
+        });
         action = new TogglePower();
     });
 
@@ -64,15 +77,15 @@ describe("TogglePower", () => {
         it("updates title when state changes after appearing", () => {
             const ev = makeWillAppearEvent();
             action.onWillAppear(ev as never);
-            stateChangeListeners[0]("connected");
+            poolStateChangeListeners[0]("default-id", "connected");
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
         });
 
         it("replaces old listener when onWillAppear is called again for same instance", () => {
             action.onWillAppear(makeWillAppearEvent("same-id") as never);
-            const firstListener = stateChangeListeners[0];
+            const firstHandler = poolStateChangeListeners[0];
             action.onWillAppear(makeWillAppearEvent("same-id") as never);
-            expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", firstListener);
+            expect(mockTvClientPool.off).toHaveBeenCalledWith("stateChange", firstHandler);
         });
 
         it("tracks separate listeners for multiple visible instances", () => {
@@ -80,8 +93,8 @@ describe("TogglePower", () => {
             const ev2 = makeWillAppearEvent("id-2");
             action.onWillAppear(ev1 as never);
             action.onWillAppear(ev2 as never);
-            expect(mockTvClient.off).not.toHaveBeenCalled();
-            stateChangeListeners.forEach(l => l("connected"));
+            expect(mockTvClientPool.off).not.toHaveBeenCalled();
+            poolStateChangeListeners.forEach(l => l("default-id", "connected"));
             expect(ev1.action.setTitle).toHaveBeenLastCalledWith("On");
             expect(ev2.action.setTitle).toHaveBeenLastCalledWith("On");
         });
@@ -90,14 +103,14 @@ describe("TogglePower", () => {
     describe("onWillDisappear", () => {
         it("removes only its own stateChange listener", () => {
             action.onWillAppear(makeWillAppearEvent("action-id") as never);
-            const listener = stateChangeListeners[0];
+            const listener = poolStateChangeListeners[0];
             action.onWillDisappear({ action: { id: "action-id" } } as never);
-            expect(mockTvClient.off).toHaveBeenCalledWith("stateChange", listener);
+            expect(mockTvClientPool.off).toHaveBeenCalledWith("stateChange", listener);
         });
 
         it("does nothing if no listener was registered for the given id", () => {
             action.onWillDisappear({ action: { id: "unknown-id" } } as never);
-            expect(mockTvClient.off).not.toHaveBeenCalled();
+            expect(mockTvClientPool.off).not.toHaveBeenCalled();
         });
     });
 
@@ -105,7 +118,7 @@ describe("TogglePower", () => {
         it("sends turnOff when connected", async () => {
             mockTvClient.state = "connected";
             mockTvClient.request.mockResolvedValue(undefined);
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             expect(mockTvClient.request).toHaveBeenCalledWith("ssap://system/turnOff");
             expect(mockTvClient.reconnect).not.toHaveBeenCalled();
         });
@@ -118,14 +131,14 @@ describe("TogglePower", () => {
                 return Promise.resolve();
             });
             mockTvClient.reconnect.mockImplementation(() => { order.push("reconnect"); });
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             expect(order).toEqual(["wakeOnLan", "reconnect"]);
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
 
         it("does nothing when connecting", async () => {
             mockTvClient.state = "connecting";
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             expect(mockTvClient.reconnect).not.toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
@@ -133,7 +146,7 @@ describe("TogglePower", () => {
         it("does not throw when turnOff request fails", async () => {
             mockTvClient.state = "connected";
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
-            await expect(action.onKeyDown({} as never)).resolves.toBeUndefined();
+            await expect(action.onKeyDown({ payload: { settings: {} } } as never)).resolves.toBeUndefined();
         });
     });
 });

@@ -9,7 +9,15 @@ const mockTvClient = vi.hoisted(() => ({
     waitForConnected: vi.fn(),
 }));
 
-vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
+vi.mock("../tv-client-pool.js", () => ({
+    tvClientPool: {
+        get: vi.fn().mockReturnValue(mockTvClient),
+        getDefault: vi.fn().mockReturnValue(mockTvClient),
+        getDefaultId: vi.fn().mockReturnValue("default-id"),
+        on: vi.fn(),
+        off: vi.fn(),
+    },
+}));
 
 vi.mock("@elgato/streamdeck", () => ({
     action: () => (cls: unknown) => cls,
@@ -30,7 +38,7 @@ describe("MediaPlayPause", () => {
 
     describe("onKeyDown", () => {
         it("calls wakeOnLan and reconnect when disconnected, does not send request when connection fails", async () => {
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
             expect(mockTvClient.reconnect).toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
@@ -38,7 +46,7 @@ describe("MediaPlayPause", () => {
 
         it("does not call wakeOnLan or reconnect when connecting", async () => {
             mockTvClient.state = "connecting";
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             expect(mockTvClient.wakeOnLan).not.toHaveBeenCalled();
             expect(mockTvClient.reconnect).not.toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
@@ -48,7 +56,7 @@ describe("MediaPlayPause", () => {
             mockTvClient.state = "connected";
             mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             expect(mockTvClient.request).toHaveBeenCalledWith("ssap://media.controls/play");
         });
 
@@ -56,8 +64,8 @@ describe("MediaPlayPause", () => {
             mockTvClient.state = "connected";
             mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
-            await action.onKeyDown({} as never); // play
-            await action.onKeyDown({} as never); // pause
+            await action.onKeyDown({ payload: { settings: {} } } as never); // play
+            await action.onKeyDown({ payload: { settings: {} } } as never); // pause
             expect(mockTvClient.request).toHaveBeenNthCalledWith(1, "ssap://media.controls/play");
             expect(mockTvClient.request).toHaveBeenNthCalledWith(2, "ssap://media.controls/pause");
         });
@@ -66,9 +74,9 @@ describe("MediaPlayPause", () => {
             mockTvClient.state = "connected";
             mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
-            await action.onKeyDown({} as never); // play
-            await action.onKeyDown({} as never); // pause
-            await action.onKeyDown({} as never); // play
+            await action.onKeyDown({ payload: { settings: {} } } as never); // play
+            await action.onKeyDown({ payload: { settings: {} } } as never); // pause
+            await action.onKeyDown({ payload: { settings: {} } } as never); // play
             expect(mockTvClient.request).toHaveBeenNthCalledWith(3, "ssap://media.controls/play");
         });
 
@@ -76,10 +84,10 @@ describe("MediaPlayPause", () => {
             mockTvClient.state = "connected";
             mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             // state should not have flipped — next press should still try play
             mockTvClient.request.mockResolvedValue(undefined);
-            await action.onKeyDown({} as never);
+            await action.onKeyDown({ payload: { settings: {} } } as never);
             expect(mockTvClient.request).toHaveBeenLastCalledWith("ssap://media.controls/play");
         });
 
@@ -87,7 +95,7 @@ describe("MediaPlayPause", () => {
             mockTvClient.state = "connected";
             mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
-            await expect(action.onKeyDown({} as never)).resolves.toBeUndefined();
+            await expect(action.onKeyDown({ payload: { settings: {} } } as never)).resolves.toBeUndefined();
         });
     });
 });

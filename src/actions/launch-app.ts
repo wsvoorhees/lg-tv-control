@@ -1,7 +1,8 @@
 import { action, DidReceiveSettingsEvent, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
-import { tvClient } from "../tv-client";
+import type { BaseTvActionSettings } from "../types";
+import { resolveClient } from "./action-helpers";
 
-type LaunchAppSettings = {
+type LaunchAppSettings = BaseTvActionSettings & {
     appId?: string;
     appLabel?: string;
 };
@@ -19,7 +20,7 @@ export class LaunchApp extends SingletonAction<LaunchAppSettings> {
     }
 
     override async onKeyDown(ev: KeyDownEvent<LaunchAppSettings>): Promise<void> {
-        const { appId, appLabel } = ev.payload.settings;
+        const { appId, appLabel, tvId } = ev.payload.settings;
 
         if (!appId) {
             ev.action.setTitle("No app");
@@ -27,13 +28,16 @@ export class LaunchApp extends SingletonAction<LaunchAppSettings> {
             return;
         }
 
-        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
-        const needsWait = tvClient.state !== "connected";
+        const client = resolveClient(tvId);
+        if (!client) return;
+
+        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
+        const needsWait = client.state !== "connected";
         if (needsWait) ev.action.setTitle("...");
 
         try {
-            await tvClient.waitForConnected();
-            await tvClient.request("ssap://system.launcher/launch", { id: appId });
+            await client.waitForConnected();
+            await client.request("ssap://system.launcher/launch", { id: appId });
             if (needsWait) ev.action.setTitle(appLabel ?? appId);
         } catch {
             ev.action.setTitle("!");

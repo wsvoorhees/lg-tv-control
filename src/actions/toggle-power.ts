@@ -1,16 +1,19 @@
 import { action, KeyDownEvent } from "@elgato/streamdeck";
-import { tvClient } from "../tv-client";
+import type { BaseTvActionSettings } from "../types";
+import { resolveClient } from "./action-helpers";
 import { StatefulTvAction } from "./stateful-tv-action";
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.toggle-power" })
 export class TogglePower extends StatefulTvAction {
-    override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
-        if (tvClient.state === "connected") {
-            try { await tvClient.request("ssap://system/turnOff"); } catch { /* ignore */ }
-        } else if (tvClient.state === "disconnected") {
-            await tvClient.wakeOnLan();
-            tvClient.reconnect();
+    override async onKeyDown(ev: KeyDownEvent<BaseTvActionSettings>): Promise<void> {
+        const client = resolveClient(ev.payload.settings?.tvId);
+        if (!client) return;
+        if (client.state === "connected") {
+            try { await client.request("ssap://system/turnOff"); } catch { /* ignore */ }
+        } else if (client.state === "disconnected") {
+            await client.wakeOnLan();
+            client.reconnect();
         }
-        // If "connecting", do nothing and let the connection complete
+        // If "connecting", do nothing
     }
 }

@@ -2,7 +2,8 @@ import lgtv2 from "lgtv2";
 import { EventEmitter } from "node:events";
 import streamDeck from "@elgato/streamdeck";
 
-export type ConnectionState = "disconnected" | "connecting" | "connected";
+import type { ConnectionState } from "./types.js";
+export type { ConnectionState } from "./types.js";
 
 type LgtvInstance = ReturnType<typeof lgtv2>;
 
@@ -156,4 +157,3 @@ export class TvClient extends EventEmitter {
     }
 }
 
-export const tvClient = new TvClient();

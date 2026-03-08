@@ -1,7 +1,8 @@
 import { action, DidReceiveSettingsEvent, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
-import { tvClient } from "../tv-client";
+import type { BaseTvActionSettings } from "../types";
+import { resolveClient } from "./action-helpers";
 
-type SetInputSettings = {
+type SetInputSettings = BaseTvActionSettings & {
     inputId?: string;
     inputLabel?: string;
 };
@@ -19,7 +20,7 @@ export class SetInput extends SingletonAction<SetInputSettings> {
     }
 
     override async onKeyDown(ev: KeyDownEvent<SetInputSettings>): Promise<void> {
-        const { inputId, inputLabel } = ev.payload.settings;
+        const { inputId, inputLabel, tvId } = ev.payload.settings;
 
         if (!inputId) {
             ev.action.setTitle("No input");
@@ -27,13 +28,16 @@ export class SetInput extends SingletonAction<SetInputSettings> {
             return;
         }
 
-        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
-        const needsWait = tvClient.state !== "connected";
+        const client = resolveClient(tvId);
+        if (!client) return;
+
+        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
+        const needsWait = client.state !== "connected";
         if (needsWait) ev.action.setTitle("...");
 
         try {
-            await tvClient.waitForConnected();
-            await tvClient.request("ssap://tv/switchInput", { inputId });
+            await client.waitForConnected();
+            await client.request("ssap://tv/switchInput", { inputId });
             if (needsWait) ev.action.setTitle(inputLabel ?? inputId);
         } catch {
             ev.action.setTitle("!");

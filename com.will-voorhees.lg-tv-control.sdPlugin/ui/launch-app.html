@@ -8,50 +8,102 @@
 </head>
 
 <body>
+    <sdpi-item label="TV">
+        <sdpi-select id="tv-picker">
+            <option value="">Default TV</option>
+        </sdpi-select>
+    </sdpi-item>
+
     <sdpi-item label="App">
         <button id="fetch-btn" class="pi-btn">Fetch Apps from TV</button>
     </sdpi-item>
 
     <sdpi-item label="Select" id="app-select-item" style="display: none">
-        <sdpi-select id="app-select" setting="appId">
+        <sdpi-select id="app-select">
             <option value="">Select an app...</option>
         </sdpi-select>
     </sdpi-item>
 
     <p id="app-status" class="pi-status"></p>
 
-    <div id="tv-selector-root"></div>
+    <style>
+        .pi-btn {
+            display: block;
+            width: 100%;
+            padding: 5px 10px;
+            background: var(--sdpi-background, #2d2d2d);
+            color: var(--sdpi-color, #d8d8d8);
+            border: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+        }
+        .pi-btn:hover { filter: brightness(1.2); }
+        .pi-status {
+            margin: 2px 0 4px 0;
+            padding: 0 6px;
+            font-size: 11px;
+            opacity: 0.7;
+            min-height: 14px;
+            color: #ffffff;
+        }
+    </style>
 
-    <script src="tv-selector.js"></script>
     <script>
         const sd = SDPIComponents.streamDeckClient;
 
-        // Show saved app when the PI opens
+        let currentSettings = {};
+        let appLabelMap = {};
+
+        // Load saved settings when PI opens
         sd.didReceiveSettings.subscribe(({ payload }) => {
-            const { appId, appLabel } = payload.settings;
+            currentSettings = { ...payload.settings };
+            const { appId, appLabel } = currentSettings;
             if (appId) {
                 const select = document.getElementById('app-select');
                 select.innerHTML = `<option value="${appId}">${appLabel ?? appId}</option>`;
                 document.getElementById('app-select-item').style.display = '';
             }
+            // TV picker will be restored when tvList arrives
+        });
+
+        // Request TV list for the picker
+        sd.send('sendToPlugin', { event: 'getTvList' });
+
+        document.getElementById('tv-picker').addEventListener('change', (e) => {
+            currentSettings = { ...currentSettings, tvId: e.target.value || undefined };
+            sd.setSettings(currentSettings);
         });
 
         document.getElementById('fetch-btn').addEventListener('click', () => {
             document.getElementById('app-status').textContent = 'Fetching apps...';
-            sd.send('sendToPlugin', { event: 'getAppList' });
+            sd.send('sendToPlugin', { event: 'getAppList', tvId: currentSettings.tvId });
         });
-
-        let appLabelMap = {};
 
         document.getElementById('app-select').addEventListener('change', (e) => {
             const appId = e.target.value;
             const appLabel = appLabelMap[appId] ?? appId;
             if (appId) {
-                sd.setSettings({ appId, appLabel });
+                currentSettings = { ...currentSettings, appId, appLabel };
+                sd.setSettings(currentSettings);
             }
         });
 
         sd.sendToPropertyInspector.subscribe(({ payload }) => {
+            if (payload.event === 'tvList') {
+                const picker = document.getElementById('tv-picker');
+                picker.innerHTML = '<option value="">Default TV</option>';
+                (payload.tvs ?? []).forEach(tv => {
+                    const opt = document.createElement('option');
+                    opt.value = tv.id;
+                    opt.textContent = tv.name;
+                    picker.appendChild(opt);
+                });
+                picker.value = currentSettings.tvId ?? '';
+                return;
+            }
+
             if (payload.event !== 'appList') return;
 
             const select = document.getElementById('app-select');

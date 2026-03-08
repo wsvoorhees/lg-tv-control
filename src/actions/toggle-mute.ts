@@ -1,18 +1,21 @@
 import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
-import { tvClient } from "../tv-client";
+import type { BaseTvActionSettings } from "../types";
+import { resolveClient } from "./action-helpers";
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.toggle-mute" })
-export class ToggleMute extends SingletonAction {
+export class ToggleMute extends SingletonAction<BaseTvActionSettings> {
     private _inFlight = false;
 
-    override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
+    override async onKeyDown(ev: KeyDownEvent<BaseTvActionSettings>): Promise<void> {
+        const client = resolveClient(ev.payload.settings?.tvId);
+        if (!client) return;
         if (this._inFlight) return;
-        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
+        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
         this._inFlight = true;
         try {
-            await tvClient.waitForConnected();
-            const res = await tvClient.request("ssap://audio/getMute") as { mute: boolean };
-            await tvClient.request("ssap://audio/setMute", { mute: !res.mute });
+            await client.waitForConnected();
+            const res = await client.request("ssap://audio/getMute") as { mute: boolean };
+            await client.request("ssap://audio/setMute", { mute: !res.mute });
         } catch { /* ignore */ }
         finally { this._inFlight = false; }
     }

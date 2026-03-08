@@ -1,51 +1,48 @@
 /**
- * Shared TV selector component.
- *
- * Injects TV IP address input, scan button, and found TVs dropdown into
- * a #tv-selector-root placeholder element in the host HTML.
+ * Multi-TV management UI component.
+ * Injects a TV list + add/edit/remove form into #tv-selector-root.
+ * Used by tv-connection.html for all standard actions.
  */
 
-// Inject TV selector HTML into the placeholder div
 const tvSelectorRoot = document.getElementById('tv-selector-root');
 if (tvSelectorRoot) {
     tvSelectorRoot.innerHTML = `
         <div class="tv-config-group">
             <div class="tv-config-group-header">
-                <div class="tv-config-group-label">TV Configuration</div>
-                <div class="tv-connection-indicator">
-                    <span class="tv-connection-dot" id="connection-dot"></span>
-                    <span class="tv-connection-text" id="connection-text">Unknown</span>
-                </div>
+                <span class="tv-config-group-label">TV Configuration</span>
             </div>
+            <div id="tv-list"><p class="pi-status">Loading...</p></div>
+            <hr class="tv-config-separator">
+            <div class="tv-config-group-label" id="form-section-label" style="margin-bottom:6px">Add TV</div>
             <sdpi-item label="Name">
-                <input id="name-input" type="text" placeholder="e.g. Living Room TV">
+                <input id="tv-name-input" type="text" placeholder="Living Room TV">
             </sdpi-item>
             <sdpi-item label="IP Address">
-                <input id="ip-input" type="text" placeholder="192.168.1.x">
+                <input id="tv-ip-input" type="text" placeholder="192.168.1.x">
             </sdpi-item>
             <sdpi-item label="MAC Address">
-                <input id="mac-input" type="text" placeholder="AA:BB:CC:DD:EE:FF">
+                <input id="tv-mac-input" type="text" placeholder="AA:BB:CC:DD:EE:FF (optional)">
             </sdpi-item>
             <sdpi-item>
-                <button id="connect-btn" class="pi-btn">Connect</button>
+                <button id="tv-save-btn" class="pi-btn">Add TV</button>
+                <button id="tv-cancel-btn" class="pi-btn" style="display:none; margin-top:4px">Cancel</button>
             </sdpi-item>
             <hr class="tv-config-separator">
-            <sdpi-item label="Found TVs" id="tv-list-item">
-                <sdpi-select id="tv-select">
-                    <option value="">Select a TV...</option>
+            <sdpi-item label="Found TVs">
+                <sdpi-select id="tv-scan-select">
+                    <option value="-1">Scan to find TVs...</option>
                 </sdpi-select>
             </sdpi-item>
             <sdpi-item>
-                <button id="scan-btn" class="pi-btn">Scan for TVs</button>
-                <p id="scan-status" class="pi-status"></p>
+                <button id="tv-scan-btn" class="pi-btn">Scan for TVs</button>
+                <p id="tv-scan-status" class="pi-status"></p>
             </sdpi-item>
         </div>
     `;
 }
 
-// Inject shared button/input styles
-const style = document.createElement('style');
-style.textContent = `
+const tvSelectorStyle = document.createElement('style');
+tvSelectorStyle.textContent = `
     .pi-btn {
         display: block;
         width: 100%;
@@ -61,6 +58,12 @@ style.textContent = `
     .pi-btn:hover:not(:disabled) { filter: brightness(1.2); }
     .pi-btn:active:not(:disabled) { filter: brightness(0.85); }
     .pi-btn:disabled { opacity: 0.5; cursor: default; }
+    .pi-btn-sm {
+        display: inline-block;
+        width: auto;
+        padding: 3px 8px;
+        font-size: 11px;
+    }
     .pi-status {
         margin: 2px 0 4px 0;
         padding: 0 6px;
@@ -79,7 +82,6 @@ style.textContent = `
     .tv-config-group-header {
         display: flex;
         align-items: center;
-        justify-content: space-between;
         margin-bottom: 8px;
         padding: 0 2px;
     }
@@ -89,10 +91,44 @@ style.textContent = `
         letter-spacing: 0.06em;
         color: #ffffff;
     }
-    .tv-connection-indicator {
+    .tv-config-separator {
+        border: none;
+        border-top: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
+        margin: 12px 0;
+    }
+    .tv-entry {
         display: flex;
         align-items: center;
-        gap: 5px;
+        justify-content: space-between;
+        padding: 5px 4px;
+        border-radius: 3px;
+        margin-bottom: 4px;
+        background: rgba(255,255,255,0.04);
+    }
+    .tv-entry-info {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+    }
+    .tv-entry-name {
+        font-size: 12px;
+        color: #d8d8d8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .tv-entry-ip {
+        font-size: 10px;
+        opacity: 0.55;
+        white-space: nowrap;
+    }
+    .tv-entry-btns {
+        display: flex;
+        gap: 4px;
+        flex-shrink: 0;
+        margin-left: 6px;
     }
     .tv-connection-dot {
         width: 7px;
@@ -104,17 +140,7 @@ style.textContent = `
     .tv-connection-dot.connected { background: #4caf50; }
     .tv-connection-dot.connecting { background: #ff9800; }
     .tv-connection-dot.disconnected { background: #666; }
-    .tv-connection-text {
-        font-size: 10px;
-        opacity: 0.8;
-        color: #ffffff;
-    }
-    .tv-config-separator {
-        border: none;
-        border-top: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
-        margin: 12px 0;
-    }
-    #ip-input, #name-input, #mac-input {
+    #tv-name-input, #tv-ip-input, #tv-mac-input {
         width: 100%;
         box-sizing: border-box;
         padding: 4px 6px;
@@ -125,116 +151,174 @@ style.textContent = `
         font-size: 12px;
     }
 `;
-document.head.appendChild(style);
+document.head.appendChild(tvSelectorStyle);
 
 function initTvSelector() {
     const sd = SDPIComponents.streamDeckClient;
-    const ipInput = document.getElementById('ip-input');
-    const nameInput = document.getElementById('name-input');
-    const macInput = document.getElementById('mac-input');
-    const connectBtn = document.getElementById('connect-btn');
-    const scanBtn = document.getElementById('scan-btn');
 
+    const nameInput = document.getElementById('tv-name-input');
+    const ipInput = document.getElementById('tv-ip-input');
+    const macInput = document.getElementById('tv-mac-input');
+    const saveBtn = document.getElementById('tv-save-btn');
+    const cancelBtn = document.getElementById('tv-cancel-btn');
+    const scanBtn = document.getElementById('tv-scan-btn');
+    const scanSelect = document.getElementById('tv-scan-select');
+    const scanStatus = document.getElementById('tv-scan-status');
+    const formLabel = document.getElementById('form-section-label');
+    const tvListEl = document.getElementById('tv-list');
+
+    if (!tvListEl) return;
+
+    let tvList = [];
+    let scanResults = [];
+    let editingId = null;
     let scanTimeout = null;
 
-    function saveSettings() {
-        sd.setGlobalSettings({
-            tvIpAddress: ipInput.value.trim(),
-            tvName: nameInput.value.trim(),
-            tvMacAddress: macInput.value.trim(),
-        });
+    function escHtml(str) {
+        return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // Load saved global settings into the input fields.
-    sd.didReceiveGlobalSettings.subscribe(({ payload }) => {
-        const s = payload.settings;
-        if (s.tvIpAddress) ipInput.value = s.tvIpAddress;
-        if (s.tvName) nameInput.value = s.tvName;
-        if (s.tvMacAddress) macInput.value = s.tvMacAddress;
-    });
-    sd.getGlobalSettings();
-
-    ipInput.addEventListener('change', saveSettings);
-    nameInput.addEventListener('change', saveSettings);
-    macInput.addEventListener('change', saveSettings);
-
-    let connectionState = 'disconnected';
-
-    connectBtn.addEventListener('click', () => {
-        if (connectionState === 'connected') {
-            sd.send('sendToPlugin', { event: 'connect' });
-        } else {
-            sd.send('sendToPlugin', { event: 'connect', ip: ipInput.value.trim(), mac: macInput.value.trim() });
+    function renderTvList() {
+        if (tvList.length === 0) {
+            tvListEl.innerHTML = '<p class="pi-status">No TVs configured. Add one below.</p>';
+            return;
         }
-    });
-
-    function updateConnectionIndicator(state) {
-        connectionState = state;
-        const dot = document.getElementById('connection-dot');
-        const text = document.getElementById('connection-text');
-        dot.className = `tv-connection-dot ${state}`;
-        text.textContent = state === 'connected' ? 'Connected'
-            : state === 'connecting' ? 'Connecting...'
-            : 'Disconnected';
-        connectBtn.textContent = state === 'connected' ? 'Disconnect' : 'Connect';
+        tvListEl.innerHTML = tvList.map(tv => `
+            <div class="tv-entry" id="tv-entry-${tv.id}">
+                <div class="tv-entry-info">
+                    <span class="tv-connection-dot ${tv.state ?? 'disconnected'}" id="dot-${tv.id}"></span>
+                    <span class="tv-entry-name">${escHtml(tv.name)}</span>
+                    <span class="tv-entry-ip">${escHtml(tv.ip)}</span>
+                </div>
+                <div class="tv-entry-btns">
+                    <button class="pi-btn pi-btn-sm" data-action="edit" data-id="${tv.id}">Edit</button>
+                    <button class="pi-btn pi-btn-sm" data-action="remove" data-id="${tv.id}">✕</button>
+                </div>
+            </div>
+        `).join('');
     }
 
-    // Request current connection state on load.
-    sd.send('sendToPlugin', { event: 'getConnectionState' });
+    function updateConnectionDot(id, state) {
+        const dot = document.getElementById(`dot-${id}`);
+        if (dot) dot.className = `tv-connection-dot ${state}`;
+    }
+
+    function startEdit(id) {
+        const tv = tvList.find(t => t.id === id);
+        if (!tv) return;
+        editingId = id;
+        nameInput.value = tv.name ?? '';
+        ipInput.value = tv.ip ?? '';
+        macInput.value = tv.mac ?? '';
+        formLabel.textContent = 'Edit TV';
+        saveBtn.textContent = 'Save Changes';
+        cancelBtn.style.display = '';
+        nameInput.focus();
+    }
+
+    function resetForm() {
+        editingId = null;
+        nameInput.value = '';
+        ipInput.value = '';
+        macInput.value = '';
+        formLabel.textContent = 'Add TV';
+        saveBtn.textContent = 'Add TV';
+        cancelBtn.style.display = 'none';
+        ipInput.style.outline = '';
+    }
 
     function resetScanBtn() {
         scanBtn.textContent = 'Scan for TVs';
         scanBtn.disabled = false;
-        if (scanTimeout) {
-            clearTimeout(scanTimeout);
-            scanTimeout = null;
-        }
+        if (scanTimeout) { clearTimeout(scanTimeout); scanTimeout = null; }
     }
+
+    // Event delegation for TV list Edit/Remove buttons
+    tvListEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const id = btn.dataset.id;
+        if (btn.dataset.action === 'edit') {
+            startEdit(id);
+        } else if (btn.dataset.action === 'remove') {
+            sd.send('sendToPlugin', { event: 'removeTv', id });
+            if (editingId === id) resetForm();
+        }
+    });
+
+    cancelBtn.addEventListener('click', resetForm);
+
+    saveBtn.addEventListener('click', () => {
+        const ip = ipInput.value.trim();
+        const name = nameInput.value.trim() || 'LG TV';
+        const mac = macInput.value.trim();
+        if (!ip) {
+            ipInput.style.outline = '1px solid #f44';
+            return;
+        }
+        ipInput.style.outline = '';
+        if (editingId) {
+            sd.send('sendToPlugin', { event: 'updateTv', id: editingId, ip, name, mac });
+        } else {
+            sd.send('sendToPlugin', { event: 'addTv', ip, name, mac });
+        }
+        resetForm();
+    });
+
+    // When user picks a found TV from the scan dropdown, fill the IP (and name) inputs
+    scanSelect.addEventListener('change', (e) => {
+        const idx = parseInt(e.target.value, 10);
+        if (isNaN(idx) || idx < 0) return;
+        const found = scanResults[idx];
+        if (!found) return;
+        ipInput.value = found.ip;
+        if (found.name && !nameInput.value.trim()) nameInput.value = found.name;
+    });
 
     scanBtn.addEventListener('click', () => {
         scanBtn.textContent = 'Scanning...';
         scanBtn.disabled = true;
-        document.getElementById('scan-status').textContent = '';
+        scanStatus.textContent = '';
         sd.send('sendToPlugin', { event: 'scanForTVs' });
-
         scanTimeout = setTimeout(() => {
             resetScanBtn();
-            document.getElementById('scan-status').textContent = 'Scan timed out.';
-        }, 6000);
-    });
-
-    document.getElementById('tv-select').addEventListener('change', (e) => {
-        const ip = e.target.value;
-        if (!ip) return;
-        ipInput.value = ip;
-        saveSettings();
+            scanStatus.textContent = 'Scan timed out.';
+        }, 8000);
     });
 
     sd.sendToPropertyInspector.subscribe(({ payload }) => {
-        if (payload.event === 'connectionState') {
-            updateConnectionIndicator(payload.state);
+        if (payload.event === 'tvList') {
+            tvList = payload.tvs ?? [];
+            renderTvList();
             return;
         }
-        if (payload.event !== 'tvScanResults') return;
-
-        const select = document.getElementById('tv-select');
-        const status = document.getElementById('scan-status');
-
-        resetScanBtn();
-        select.innerHTML = '<option value="">Select a TV...</option>';
-
-        if (payload.tvs.length === 0) {
-            status.textContent = 'No TVs found.';
-        } else {
-            payload.tvs.forEach(tv => {
-                const option = document.createElement('option');
-                option.value = tv.ip;
-                option.textContent = tv.name ? `${tv.name} (${tv.ip})` : tv.ip;
-                select.appendChild(option);
-            });
-            status.textContent = `Found ${payload.tvs.length} TV(s).`;
+        if (payload.event === 'connectionState') {
+            const tv = tvList.find(t => t.id === payload.id);
+            if (tv) {
+                tv.state = payload.state;
+                updateConnectionDot(payload.id, payload.state);
+            }
+            return;
+        }
+        if (payload.event === 'tvScanResults') {
+            resetScanBtn();
+            scanResults = payload.tvs ?? [];
+            scanSelect.innerHTML = '<option value="-1">Select a found TV...</option>';
+            if (scanResults.length === 0) {
+                scanStatus.textContent = 'No TVs found.';
+            } else {
+                scanResults.forEach((tv, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = String(i);
+                    opt.textContent = tv.name ? `${tv.name} (${tv.ip})` : tv.ip;
+                    scanSelect.appendChild(opt);
+                });
+                scanStatus.textContent = `Found ${scanResults.length} TV(s).`;
+            }
         }
     });
+
+    sd.send('sendToPlugin', { event: 'getTvList' });
 }
 
 initTvSelector();

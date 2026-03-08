@@ -1,13 +1,16 @@
 import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
-import { tvClient } from "../tv-client";
+import type { BaseTvActionSettings } from "../types";
+import { resolveClient } from "./action-helpers";
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.volume-down" })
-export class VolumeDown extends SingletonAction {
-    override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
-        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
+export class VolumeDown extends SingletonAction<BaseTvActionSettings> {
+    override async onKeyDown(ev: KeyDownEvent<BaseTvActionSettings>): Promise<void> {
+        const client = resolveClient(ev.payload.settings?.tvId);
+        if (!client) return;
+        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
         try {
-            await tvClient.waitForConnected();
-            await tvClient.request("ssap://audio/volumeDown");
+            await client.waitForConnected();
+            await client.request("ssap://audio/volumeDown");
         } catch { /* ignore */ }
     }
 }
