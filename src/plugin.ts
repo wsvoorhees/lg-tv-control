@@ -59,15 +59,21 @@ export function migrateSettings(raw: Record<string, unknown>): GlobalSettings {
     return { tvs };
 }
 
+async function sendTvList(): Promise<void> {
+    const configs = tvClientPool.getConfigs();
+    const tvs = configs.map(cfg => ({ ...cfg, state: tvClientPool.get(cfg.id)?.state ?? "disconnected" }));
+    try {
+        await streamDeck.ui.sendToPropertyInspector({ event: "tvList", tvs });
+    } catch { /* PI may not be open */ }
+}
+
 // Handle messages from the property inspector.
 streamDeck.ui.onSendToPlugin(async (ev) => {
     const payload = ev.payload as { event?: string } & Record<string, unknown>;
     streamDeck.logger.debug(`[plugin] PI → plugin: ${payload.event}`);
 
     if (payload.event === "getTvList") {
-        const configs = tvClientPool.getConfigs();
-        const tvs = configs.map(cfg => ({ ...cfg, state: tvClientPool.get(cfg.id)?.state ?? "disconnected" }));
-        await streamDeck.ui.sendToPropertyInspector({ event: "tvList", tvs });
+        await sendTvList();
         return;
     }
 
@@ -81,6 +87,7 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
         ];
         await streamDeck.settings.setGlobalSettings({ tvs });
         tvClientPool.configure(tvs);
+        await sendTvList();
         return;
     }
 
@@ -100,6 +107,7 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
         );
         await streamDeck.settings.setGlobalSettings({ tvs });
         tvClientPool.configure(tvs);
+        await sendTvList();
         return;
     }
 
@@ -110,6 +118,7 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
         const tvs = (settings.tvs ?? []).filter(t => t.id !== id);
         await streamDeck.settings.setGlobalSettings({ tvs });
         tvClientPool.configure(tvs);
+        await sendTvList();
         return;
     }
 

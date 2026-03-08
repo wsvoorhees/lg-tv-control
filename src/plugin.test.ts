@@ -227,54 +227,71 @@ describe("plugin", () => {
         });
 
         describe("addTv", () => {
-            it("appends a new TV entry and calls configure()", async () => {
+            it("appends a new TV entry, calls configure(), and sends tvList to PI", async () => {
                 mockGetGlobalSettings.mockResolvedValue({ tvs: [] });
+                mockTvClientPool.getConfigs.mockReturnValue([
+                    { id: "new-id", name: "New TV", ip: "192.168.1.20", mac: "AA:BB:CC:DD:EE:FF" },
+                ]);
                 await handlers.sendToPlugin!({ payload: { event: "addTv", ip: "192.168.1.20", mac: "AA:BB:CC:DD:EE:FF", name: "New TV" } });
                 expect(mockTvClientPool.configure).toHaveBeenCalledWith(
                     expect.arrayContaining([
                         expect.objectContaining({ ip: "192.168.1.20", mac: "AA:BB:CC:DD:EE:FF", name: "New TV" }),
                     ])
                 );
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith(
+                    expect.objectContaining({ event: "tvList" })
+                );
             });
 
             it("ignores addTv with no ip", async () => {
                 await handlers.sendToPlugin!({ payload: { event: "addTv" } });
                 expect(mockTvClientPool.configure).not.toHaveBeenCalled();
+                expect(mockSendToPropertyInspector).not.toHaveBeenCalled();
             });
         });
 
         describe("updateTv", () => {
-            it("updates an existing TV and calls configure()", async () => {
+            it("updates an existing TV, calls configure(), and sends tvList to PI", async () => {
                 const existing = [{ id: "id-a", name: "Living Room", ip: "192.168.1.10" }];
                 mockGetGlobalSettings.mockResolvedValue({ tvs: existing });
+                mockTvClientPool.getConfigs.mockReturnValue([{ id: "id-a", name: "New Name", ip: "192.168.1.99" }]);
                 await handlers.sendToPlugin!({ payload: { event: "updateTv", id: "id-a", ip: "192.168.1.99", name: "New Name" } });
                 expect(mockTvClientPool.configure).toHaveBeenCalledWith([
                     expect.objectContaining({ id: "id-a", ip: "192.168.1.99", name: "New Name" }),
                 ]);
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith(
+                    expect.objectContaining({ event: "tvList" })
+                );
             });
 
             it("ignores updateTv with no id", async () => {
                 await handlers.sendToPlugin!({ payload: { event: "updateTv", ip: "1.2.3.4" } });
                 expect(mockTvClientPool.configure).not.toHaveBeenCalled();
+                expect(mockSendToPropertyInspector).not.toHaveBeenCalled();
             });
         });
 
         describe("removeTv", () => {
-            it("removes the specified TV and calls configure()", async () => {
+            it("removes the specified TV, calls configure(), and sends tvList to PI", async () => {
                 const existing = [
                     { id: "id-a", name: "Living Room", ip: "192.168.1.10" },
                     { id: "id-b", name: "Bedroom", ip: "192.168.1.11" },
                 ];
                 mockGetGlobalSettings.mockResolvedValue({ tvs: existing });
+                mockTvClientPool.getConfigs.mockReturnValue([{ id: "id-b", name: "Bedroom", ip: "192.168.1.11" }]);
                 await handlers.sendToPlugin!({ payload: { event: "removeTv", id: "id-a" } });
                 expect(mockTvClientPool.configure).toHaveBeenCalledWith([
                     { id: "id-b", name: "Bedroom", ip: "192.168.1.11" },
                 ]);
+                expect(mockSendToPropertyInspector).toHaveBeenCalledWith(
+                    expect.objectContaining({ event: "tvList" })
+                );
             });
 
             it("ignores removeTv with no id", async () => {
                 await handlers.sendToPlugin!({ payload: { event: "removeTv" } });
                 expect(mockTvClientPool.configure).not.toHaveBeenCalled();
+                expect(mockSendToPropertyInspector).not.toHaveBeenCalled();
             });
         });
 
