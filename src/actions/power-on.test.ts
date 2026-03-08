@@ -101,8 +101,8 @@ describe("PowerOn", () => {
     });
 
     describe("onKeyDown", () => {
-        it("calls wakeOnLan and reconnect", () => {
-            action.onKeyDown({} as never);
+        it("calls wakeOnLan and reconnect", async () => {
+            await action.onKeyDown({} as never);
             expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
             expect(mockTvClient.reconnect).toHaveBeenCalled();
         });

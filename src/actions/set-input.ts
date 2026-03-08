@@ -27,7 +27,7 @@ export class SetInput extends SingletonAction<SetInputSettings> {
             return;
         }
 
-        if (tvClient.state === "disconnected") { tvClient.wakeOnLan(); tvClient.reconnect(); }
+        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
         const needsWait = tvClient.state !== "connected";
         if (needsWait) ev.action.setTitle("...");
 

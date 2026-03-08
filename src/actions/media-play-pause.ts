@@ -6,7 +6,7 @@ export class MediaPlayPause extends SingletonAction {
     private _playing = false;
 
     override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
-        if (tvClient.state === "disconnected") { tvClient.wakeOnLan(); tvClient.reconnect(); }
+        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
         const wasPlaying = this._playing;
         this._playing = !wasPlaying;
         try {

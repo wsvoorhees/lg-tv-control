@@ -104,9 +104,9 @@ describe("TurnOff", () => {
     });
 
     describe("onKeyDown", () => {
-        it("calls wakeOnLan and reconnect when disconnected, does not send request when connection fails", async () => {
+        it("calls reconnect but not wakeOnLan when disconnected, does not send request when connection fails", async () => {
             await action.onKeyDown({} as never);
-            expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
+            expect(mockTvClient.wakeOnLan).not.toHaveBeenCalled();
             expect(mockTvClient.reconnect).toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });

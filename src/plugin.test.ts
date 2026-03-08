@@ -5,6 +5,7 @@ const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = 
     const handlers = {
         sendToPlugin: null as ((ev: { payload: unknown }) => Promise<void>) | null,
         stateChange: null as ((state: string) => Promise<void>) | null,
+        globalSettings: null as ((ev: { settings: unknown }) => void) | null,
     };
     return {
         mockSendToPropertyInspector: vi.fn(),
@@ -33,6 +34,7 @@ vi.mock("@elgato/streamdeck", () => ({
         connect: vi.fn().mockResolvedValue(undefined),
         settings: {
             getGlobalSettings: vi.fn().mockResolvedValue({}),
+            onDidReceiveGlobalSettings: vi.fn((handler) => { handlers.globalSettings = handler; }),
         },
     },
     action: () => (cls: unknown) => cls,
@@ -75,6 +77,7 @@ describe("startup auto-connect", () => {
                         tvIpAddress: "192.168.1.5",
                         tvMacAddress: "AA:BB:CC:DD:EE:FF",
                     }),
+                    onDidReceiveGlobalSettings: vi.fn(),
                 },
             },
             action: () => (cls: unknown) => cls,
@@ -100,6 +103,19 @@ describe("plugin", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockTvClient.state = "connected";
+    });
+
+    describe("onDidReceiveGlobalSettings", () => {
+        it("calls tvClient.connect() with new IP and MAC when tvIpAddress is set", () => {
+            handlers.globalSettings!({ settings: { tvIpAddress: "192.168.1.99", tvMacAddress: "11:22:33:44:55:66" } });
+            expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.99", "11:22:33:44:55:66");
+        });
+
+        it("calls tvClient.disconnect() when tvIpAddress is removed", () => {
+            handlers.globalSettings!({ settings: {} });
+            expect(mockTvClient.disconnect).toHaveBeenCalled();
+            expect(mockTvClient.connect).not.toHaveBeenCalled();
+        });
     });
 
     describe("stateChange listener", () => {

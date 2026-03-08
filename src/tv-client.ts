@@ -79,11 +79,12 @@ export class TvClient extends EventEmitter {
         if (this._ip) this.connect(this._ip);
     }
 
-    waitForConnected(timeoutMs = 15000): Promise<void> {
+    waitForConnected(timeoutMs = 60000): Promise<void> {
         return new Promise((resolve, reject) => {
             if (this._state === "connected") { resolve(); return; }
             if (this._state === "disconnected") { reject(new Error("Not connecting")); return; }
 
+            const capturedId = this._connectionId;
             let settled = false;
             const cleanup = () => {
                 settled = true;
@@ -93,7 +94,11 @@ export class TvClient extends EventEmitter {
             const onStateChange = (state: ConnectionState) => {
                 if (settled) return;
                 if (state === "connected") { cleanup(); resolve(); }
-                else if (state === "disconnected") { cleanup(); reject(new Error("Connection failed")); }
+                // Only reject on "disconnected" if disconnect() was explicitly called (connectionId
+                // changed), not on transient disconnects during lgtv2 retry cycles.
+                else if (state === "disconnected" && this._connectionId !== capturedId) {
+                    cleanup(); reject(new Error("Connection aborted"));
+                }
             };
             const timer = setTimeout(() => {
                 if (!settled) { cleanup(); reject(new Error("Connection timeout")); }

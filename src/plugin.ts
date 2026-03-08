@@ -100,4 +100,12 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
 streamDeck.connect().then(async () => {
     const settings = await streamDeck.settings.getGlobalSettings<{ tvIpAddress?: string; tvMacAddress?: string }>();
     if (settings.tvIpAddress) tvClient.connect(settings.tvIpAddress, settings.tvMacAddress);
+}).catch((err) => {
+    streamDeck.logger.error("Failed to connect or load global settings at startup", err);
+});
+
+streamDeck.settings.onDidReceiveGlobalSettings<{ tvIpAddress?: string; tvMacAddress?: string }>((ev) => {
+    const { tvIpAddress, tvMacAddress } = ev.settings;
+    if (tvIpAddress) tvClient.connect(tvIpAddress, tvMacAddress);
+    else tvClient.disconnect();
 });

@@ -4,7 +4,7 @@ import { tvClient } from "../tv-client";
 @action({ UUID: "com.will-voorhees.lg-tv-control.volume-down" })
 export class VolumeDown extends SingletonAction {
     override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
-        if (tvClient.state === "disconnected") { tvClient.wakeOnLan(); tvClient.reconnect(); }
+        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
         try {
             await tvClient.waitForConnected();
             await tvClient.request("ssap://audio/volumeDown");
