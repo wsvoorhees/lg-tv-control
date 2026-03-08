@@ -25,7 +25,7 @@ const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = 
 
 vi.mock("@elgato/streamdeck", () => ({
     default: {
-        logger: { setLevel: vi.fn(), info: vi.fn(), error: vi.fn() },
+        logger: { setLevel: vi.fn(), debug: vi.fn(), info: vi.fn(), error: vi.fn() },
         actions: { registerAction: vi.fn() },
         ui: {
             onSendToPlugin: vi.fn((handler) => { handlers.sendToPlugin = handler; }),
@@ -68,7 +68,7 @@ describe("startup auto-connect", () => {
         }));
         vi.doMock("@elgato/streamdeck", () => ({
             default: {
-                logger: { setLevel: vi.fn(), info: vi.fn(), error: vi.fn() },
+                logger: { setLevel: vi.fn(), debug: vi.fn(), info: vi.fn(), error: vi.fn() },
                 actions: { registerAction: vi.fn() },
                 ui: { onSendToPlugin: vi.fn(), sendToPropertyInspector: vi.fn() },
                 connect: vi.fn().mockResolvedValue(undefined),

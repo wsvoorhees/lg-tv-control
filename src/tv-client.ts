@@ -1,5 +1,6 @@
 import lgtv2 from "lgtv2";
 import { EventEmitter } from "node:events";
+import streamDeck from "@elgato/streamdeck";
 
 export type ConnectionState = "disconnected" | "connecting" | "connected";
 
@@ -22,6 +23,7 @@ export class TvClient extends EventEmitter {
         if (mac !== undefined) this._mac = mac || null;
         if (this._ip === ip && this._state !== "disconnected") return;
 
+        streamDeck.logger.debug(`[TvClient] connect: ${ip}`);
         this.disconnect();
         this._ip = ip;
         const id = this._connectionId;
@@ -51,6 +53,7 @@ export class TvClient extends EventEmitter {
     }
 
     disconnect(): void {
+        streamDeck.logger.debug("[TvClient] disconnect");
         this._connectionId++;
         this._clearConnectTimeout();
         if (this.client) {
@@ -67,6 +70,7 @@ export class TvClient extends EventEmitter {
                 reject(new Error("Not connected"));
                 return;
             }
+            streamDeck.logger.debug(`[TvClient] request: ${url}`, payload);
             if (payload) {
                 this.client.request(url, payload, (err: Error | null, res: unknown) => err ? reject(err) : resolve(res));
             } else {
@@ -76,6 +80,7 @@ export class TvClient extends EventEmitter {
     }
 
     reconnect(): void {
+        streamDeck.logger.debug("[TvClient] reconnect");
         if (this._ip) this.connect(this._ip);
     }
 
@@ -109,9 +114,11 @@ export class TvClient extends EventEmitter {
 
     async wakeOnLan(): Promise<void> {
         if (!this._mac) return;
+        streamDeck.logger.debug(`[TvClient] wakeOnLan: ${this._mac}`);
         try {
             const { wake } = await import("wol") as unknown as { wake: (mac: string) => Promise<boolean> };
             await wake(this._mac);
+            streamDeck.logger.debug("[TvClient] wakeOnLan: packet sent");
         } catch { /* ignore */ }
     }
 
@@ -124,6 +131,7 @@ export class TvClient extends EventEmitter {
 
     private _setState(state: ConnectionState): void {
         if (this._state === state) return;
+        streamDeck.logger.debug(`[TvClient] state: ${this._state} → ${state}`);
         this._state = state;
         this._clearConnectTimeout();
         if (state === "connecting") {

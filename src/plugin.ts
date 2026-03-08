@@ -45,6 +45,7 @@ tvClient.on("stateChange", async (state) => {
 // Handle messages from the property inspector.
 streamDeck.ui.onSendToPlugin(async (ev) => {
     const payload = ev.payload as { event?: string };
+    streamDeck.logger.debug(`[plugin] PI → plugin: ${payload.event}`);
 
     if (payload.event === "getConnectionState") {
         await streamDeck.ui.sendToPropertyInspector({ event: "connectionState", state: tvClient.state });
@@ -99,6 +100,7 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
 
 streamDeck.connect().then(async () => {
     const settings = await streamDeck.settings.getGlobalSettings<{ tvIpAddress?: string; tvMacAddress?: string }>();
+    streamDeck.logger.debug(`[plugin] startup: tvIpAddress=${settings.tvIpAddress ?? "none"}`);
     if (settings.tvIpAddress) tvClient.connect(settings.tvIpAddress, settings.tvMacAddress);
 }).catch((err) => {
     streamDeck.logger.error("Failed to connect or load global settings at startup", err);
@@ -106,6 +108,7 @@ streamDeck.connect().then(async () => {
 
 streamDeck.settings.onDidReceiveGlobalSettings<{ tvIpAddress?: string; tvMacAddress?: string }>((ev) => {
     const { tvIpAddress, tvMacAddress } = ev.settings;
+    streamDeck.logger.debug(`[plugin] globalSettings: tvIpAddress=${tvIpAddress ?? "none"}`);
     if (tvIpAddress) tvClient.connect(tvIpAddress, tvMacAddress);
     else tvClient.disconnect();
 });
