@@ -23,6 +23,9 @@ if (tvSelectorRoot) {
             <sdpi-item label="IP Address">
                 <input id="ip-input" type="text" placeholder="192.168.1.x">
             </sdpi-item>
+            <sdpi-item label="MAC Address">
+                <input id="mac-input" type="text" placeholder="AA:BB:CC:DD:EE:FF">
+            </sdpi-item>
             <sdpi-item>
                 <button id="connect-btn" class="pi-btn">Connect</button>
             </sdpi-item>
@@ -111,7 +114,7 @@ style.textContent = `
         border-top: 1px solid var(--sdpi-borderColor, rgba(255,255,255,0.15));
         margin: 12px 0;
     }
-    #ip-input, #name-input {
+    #ip-input, #name-input, #mac-input {
         width: 100%;
         box-sizing: border-box;
         padding: 4px 6px;
@@ -128,6 +131,7 @@ function initTvSelector() {
     const sd = SDPIComponents.streamDeckClient;
     const ipInput = document.getElementById('ip-input');
     const nameInput = document.getElementById('name-input');
+    const macInput = document.getElementById('mac-input');
     const connectBtn = document.getElementById('connect-btn');
     const scanBtn = document.getElementById('scan-btn');
 
@@ -137,6 +141,7 @@ function initTvSelector() {
         sd.setGlobalSettings({
             tvIpAddress: ipInput.value.trim(),
             tvName: nameInput.value.trim(),
+            tvMacAddress: macInput.value.trim(),
         });
     }
 
@@ -145,11 +150,13 @@ function initTvSelector() {
         const s = payload.settings;
         if (s.tvIpAddress) ipInput.value = s.tvIpAddress;
         if (s.tvName) nameInput.value = s.tvName;
+        if (s.tvMacAddress) macInput.value = s.tvMacAddress;
     });
     sd.getGlobalSettings();
 
     ipInput.addEventListener('change', saveSettings);
     nameInput.addEventListener('change', saveSettings);
+    macInput.addEventListener('change', saveSettings);
 
     let connectionState = 'disconnected';
 
@@ -157,7 +164,7 @@ function initTvSelector() {
         if (connectionState === 'connected') {
             sd.send('sendToPlugin', { event: 'connect' });
         } else {
-            sd.send('sendToPlugin', { event: 'connect', ip: ipInput.value.trim() });
+            sd.send('sendToPlugin', { event: 'connect', ip: ipInput.value.trim(), mac: macInput.value.trim() });
         }
     });
 

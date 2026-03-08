@@ -69,7 +69,7 @@ describe("plugin", () => {
         describe("connect", () => {
             it("calls tvClient.connect() with the provided IP", async () => {
                 await handlers.sendToPlugin!({ payload: { event: "connect", ip: "192.168.1.1" } });
-                expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1");
+                expect(mockTvClient.connect).toHaveBeenCalledWith("192.168.1.1", undefined);
                 expect(mockTvClient.disconnect).not.toHaveBeenCalled();
             });
 

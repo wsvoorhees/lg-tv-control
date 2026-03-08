@@ -9,24 +9,32 @@ export class TvClient extends EventEmitter {
     private client: LgtvInstance | null = null;
     private _state: ConnectionState = "disconnected";
     private _ip: string | null = null;
+    private _mac: string | null = null;
     private _connectionId = 0;
+    private _connectTimeout: ReturnType<typeof setTimeout> | null = null;
+    private _connectAttempts = 0;
 
     get state(): ConnectionState {
         return this._state;
     }
 
-    connect(ip: string): void {
+    connect(ip: string, mac?: string): void {
+        if (mac !== undefined) this._mac = mac || null;
         if (this._ip === ip && this._state !== "disconnected") return;
 
         this.disconnect();
         this._ip = ip;
         const id = this._connectionId;
+        this._connectAttempts = 0;
         this._setState("connecting");
 
         this.client = lgtv2({ url: `ws://${ip}:3000`, reconnect: 5000 });
 
         this.client.on("connect", () => {
-            if (id === this._connectionId) this._setState("connected");
+            if (id === this._connectionId) {
+                this._connectAttempts = 0;
+                this._setState("connected");
+            }
         });
 
         this.client.on("connecting", () => {
@@ -44,6 +52,7 @@ export class TvClient extends EventEmitter {
 
     disconnect(): void {
         this._connectionId++;
+        this._clearConnectTimeout();
         if (this.client) {
             this.client.disconnect();
             this.client = null;
@@ -70,9 +79,36 @@ export class TvClient extends EventEmitter {
         if (this._ip) this.connect(this._ip);
     }
 
+    async wakeOnLan(): Promise<void> {
+        if (!this._mac) return;
+        try {
+            const { wake } = await import("wol") as unknown as { wake: (mac: string) => Promise<boolean> };
+            await wake(this._mac);
+        } catch { /* ignore */ }
+    }
+
+    private _clearConnectTimeout(): void {
+        if (this._connectTimeout) {
+            clearTimeout(this._connectTimeout);
+            this._connectTimeout = null;
+        }
+    }
+
     private _setState(state: ConnectionState): void {
         if (this._state === state) return;
         this._state = state;
+        this._clearConnectTimeout();
+        if (state === "connecting") {
+            this._connectAttempts++;
+            const id = this._connectionId;
+            const attempt = this._connectAttempts;
+            this._connectTimeout = setTimeout(() => {
+                if (id === this._connectionId && this._state === "connecting") {
+                    if (attempt >= 10) this.disconnect();
+                    else this._setState("disconnected");
+                }
+            }, 10000);
+        }
         this.emit("stateChange", state);
     }
 }

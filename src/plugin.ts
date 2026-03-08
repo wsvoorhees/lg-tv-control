@@ -51,8 +51,8 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
     }
 
     if (payload.event === "connect") {
-        const { ip } = payload as { ip?: string };
-        if (ip) tvClient.connect(ip);
+        const { ip, mac } = payload as { ip?: string; mac?: string };
+        if (ip) tvClient.connect(ip, mac);
         else tvClient.disconnect();
     }
 

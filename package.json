@@ -26,7 +26,8 @@
     "dependencies": {
         "@elgato/streamdeck": "^2.0.0",
         "lgtv2": "^1.6.3",
-        "node-ssdp": "^4.0.1"
+        "node-ssdp": "^4.0.1",
+        "wol": "^1.0.7"
     },
     "version": "0.8.1.0"
 }
