@@ -4,6 +4,9 @@ import type { ConnectionState } from "../tv-client.js";
 const mockTvClient = vi.hoisted(() => ({
     state: "disconnected" as ConnectionState,
     request: vi.fn(),
+    wakeOnLan: vi.fn(),
+    reconnect: vi.fn(),
+    waitForConnected: vi.fn(),
 }));
 
 vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
@@ -21,24 +24,29 @@ describe("MediaPlayPause", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockTvClient.state = "disconnected";
+        mockTvClient.waitForConnected.mockRejectedValue(new Error("Not connecting"));
         action = new MediaPlayPause();
     });
 
     describe("onKeyDown", () => {
-        it("does nothing when not connected", async () => {
-            mockTvClient.state = "disconnected";
+        it("calls wakeOnLan and reconnect when disconnected, does not send request when connection fails", async () => {
             await action.onKeyDown({} as never);
+            expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
+            expect(mockTvClient.reconnect).toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
 
-        it("does nothing when connecting", async () => {
+        it("does not call wakeOnLan or reconnect when connecting", async () => {
             mockTvClient.state = "connecting";
             await action.onKeyDown({} as never);
+            expect(mockTvClient.wakeOnLan).not.toHaveBeenCalled();
+            expect(mockTvClient.reconnect).not.toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
 
         it("sends play on first press when connected", async () => {
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
             await action.onKeyDown({} as never);
             expect(mockTvClient.request).toHaveBeenCalledWith("ssap://media.controls/play");
@@ -46,6 +54,7 @@ describe("MediaPlayPause", () => {
 
         it("sends pause on second press (after play)", async () => {
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
             await action.onKeyDown({} as never); // play
             await action.onKeyDown({} as never); // pause
@@ -55,6 +64,7 @@ describe("MediaPlayPause", () => {
 
         it("toggles back to play on third press", async () => {
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
             await action.onKeyDown({} as never); // play
             await action.onKeyDown({} as never); // pause
@@ -64,6 +74,7 @@ describe("MediaPlayPause", () => {
 
         it("does not advance state when request fails", async () => {
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
             await action.onKeyDown({} as never);
             // state should not have flipped — next press should still try play
@@ -74,6 +85,7 @@ describe("MediaPlayPause", () => {
 
         it("does not throw when request fails", async () => {
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
             await expect(action.onKeyDown({} as never)).resolves.toBeUndefined();
         });

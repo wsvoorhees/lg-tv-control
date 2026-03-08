@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const { mockSendToPropertyInspector, mockTvClient, mockScanForTVs, handlers } = vi.hoisted(() => {
     // Defined separately so on() can capture stateChange via closure
@@ -32,7 +32,7 @@ vi.mock("@elgato/streamdeck", () => ({
         },
         connect: vi.fn().mockResolvedValue(undefined),
         settings: {
-            getGlobalSettings: vi.fn(),
+            getGlobalSettings: vi.fn().mockResolvedValue({}),
         },
     },
     action: () => (cls: unknown) => cls,
@@ -43,6 +43,58 @@ vi.mock("./tv-client.js", () => ({ tvClient: mockTvClient }));
 vi.mock("./tv-scanner.js", () => ({ scanForTVs: mockScanForTVs }));
 
 import "./plugin.js";
+
+describe("startup auto-connect", () => {
+    afterEach(() => {
+        vi.resetModules();
+    });
+
+    it("calls tvClient.connect() with IP and MAC from global settings", async () => {
+        const localConnect = vi.fn();
+        vi.resetModules();
+        vi.doMock("./tv-client.js", () => ({
+            tvClient: {
+                state: "disconnected",
+                connect: localConnect,
+                disconnect: vi.fn(),
+                request: vi.fn(),
+                on: vi.fn(),
+                off: vi.fn(),
+                wakeOnLan: vi.fn(),
+                reconnect: vi.fn(),
+            },
+        }));
+        vi.doMock("@elgato/streamdeck", () => ({
+            default: {
+                logger: { setLevel: vi.fn(), info: vi.fn(), error: vi.fn() },
+                actions: { registerAction: vi.fn() },
+                ui: { onSendToPlugin: vi.fn(), sendToPropertyInspector: vi.fn() },
+                connect: vi.fn().mockResolvedValue(undefined),
+                settings: {
+                    getGlobalSettings: vi.fn().mockResolvedValue({
+                        tvIpAddress: "192.168.1.5",
+                        tvMacAddress: "AA:BB:CC:DD:EE:FF",
+                    }),
+                },
+            },
+            action: () => (cls: unknown) => cls,
+            SingletonAction: class {},
+        }));
+        vi.doMock("./tv-scanner.js", () => ({ scanForTVs: vi.fn() }));
+
+        await import("./plugin.js");
+        // Flush microtasks: connect().then() + await getGlobalSettings()
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        expect(localConnect).toHaveBeenCalledWith("192.168.1.5", "AA:BB:CC:DD:EE:FF");
+    });
+
+    it("does not call tvClient.connect() when tvIpAddress is not configured", async () => {
+        // The top-level import ran with getGlobalSettings returning {} (no IP configured)
+        await new Promise(resolve => setTimeout(resolve, 0));
+        expect(mockTvClient.connect).not.toHaveBeenCalled();
+    });
+});
 
 describe("plugin", () => {
     beforeEach(() => {

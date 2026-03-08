@@ -27,14 +27,14 @@ export class SetInput extends SingletonAction<SetInputSettings> {
             return;
         }
 
-        if (tvClient.state !== "connected") {
-            ev.action.setTitle("...");
-            setTimeout(() => ev.action.setTitle(inputLabel ?? inputId), 2000);
-            return;
-        }
+        if (tvClient.state === "disconnected") { tvClient.wakeOnLan(); tvClient.reconnect(); }
+        const needsWait = tvClient.state !== "connected";
+        if (needsWait) ev.action.setTitle("...");
 
         try {
+            await tvClient.waitForConnected();
             await tvClient.request("ssap://tv/switchInput", { inputId });
+            if (needsWait) ev.action.setTitle(inputLabel ?? inputId);
         } catch {
             ev.action.setTitle("!");
             setTimeout(() => ev.action.setTitle(inputLabel ?? inputId), 2000);

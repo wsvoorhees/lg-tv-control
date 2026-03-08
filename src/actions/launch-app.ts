@@ -27,14 +27,14 @@ export class LaunchApp extends SingletonAction<LaunchAppSettings> {
             return;
         }
 
-        if (tvClient.state !== "connected") {
-            ev.action.setTitle("...");
-            setTimeout(() => ev.action.setTitle(appLabel ?? appId), 2000);
-            return;
-        }
+        if (tvClient.state === "disconnected") { tvClient.wakeOnLan(); tvClient.reconnect(); }
+        const needsWait = tvClient.state !== "connected";
+        if (needsWait) ev.action.setTitle("...");
 
         try {
+            await tvClient.waitForConnected();
             await tvClient.request("ssap://system.launcher/launch", { id: appId });
+            if (needsWait) ev.action.setTitle(appLabel ?? appId);
         } catch {
             ev.action.setTitle("!");
             setTimeout(() => ev.action.setTitle(appLabel ?? appId), 2000);

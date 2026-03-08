@@ -97,4 +97,7 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
     }
 });
 
-streamDeck.connect();
+streamDeck.connect().then(async () => {
+    const settings = await streamDeck.settings.getGlobalSettings<{ tvIpAddress?: string; tvMacAddress?: string }>();
+    if (settings.tvIpAddress) tvClient.connect(settings.tvIpAddress, settings.tvMacAddress);
+});

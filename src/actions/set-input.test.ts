@@ -4,6 +4,9 @@ import type { ConnectionState } from "../tv-client.js";
 const mockTvClient = vi.hoisted(() => ({
     state: "disconnected" as ConnectionState,
     request: vi.fn(),
+    wakeOnLan: vi.fn(),
+    reconnect: vi.fn(),
+    waitForConnected: vi.fn(),
 }));
 
 vi.mock("../tv-client.js", () => ({ tvClient: mockTvClient }));
@@ -35,6 +38,7 @@ describe("SetInput", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockTvClient.state = "disconnected";
+        mockTvClient.waitForConnected.mockRejectedValue(new Error("Not connecting"));
         action = new SetInput();
     });
 
@@ -104,48 +108,59 @@ describe("SetInput", () => {
             vi.useRealTimers();
         });
 
-        it("shows '...' when state is connecting", async () => {
-            vi.useFakeTimers();
-            mockTvClient.state = "connecting";
+        it("shows '...' and calls wakeOnLan and reconnect when disconnected", async () => {
             const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
+            expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
+            expect(mockTvClient.reconnect).toHaveBeenCalled();
             expect(ev.action.setTitle).toHaveBeenCalledWith("...");
             expect(mockTvClient.request).not.toHaveBeenCalled();
-            vi.useRealTimers();
         });
 
-        it("shows '...' when not connected", async () => {
+        it("shows '!' and restores inputLabel after connection failure when disconnected", async () => {
             vi.useFakeTimers();
-            mockTvClient.state = "disconnected";
-            const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
-            await action.onKeyDown(ev as never);
-            expect(ev.action.setTitle).toHaveBeenCalledWith("...");
-            expect(mockTvClient.request).not.toHaveBeenCalled();
-            vi.useRealTimers();
-        });
-
-        it("restores the input label after 2 seconds when not connected", async () => {
-            vi.useFakeTimers();
-            mockTvClient.state = "disconnected";
             const ev = makeKeyDownEvent({ inputId: "HDMI_1", inputLabel: "PlayStation" });
             await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("!");
             vi.advanceTimersByTime(2000);
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("PlayStation");
             vi.useRealTimers();
         });
 
-        it("restores the inputId when no inputLabel after 2 seconds", async () => {
+        it("shows '!' and restores inputId after connection failure when disconnected", async () => {
             vi.useFakeTimers();
-            mockTvClient.state = "disconnected";
             const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
+            expect(ev.action.setTitle).toHaveBeenCalledWith("!");
             vi.advanceTimersByTime(2000);
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("HDMI_1");
             vi.useRealTimers();
         });
 
+        it("shows '...' when connecting, does not call wakeOnLan or reconnect", async () => {
+            mockTvClient.state = "connecting";
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
+            await action.onKeyDown(ev as never);
+            expect(mockTvClient.wakeOnLan).not.toHaveBeenCalled();
+            expect(mockTvClient.reconnect).not.toHaveBeenCalled();
+            expect(ev.action.setTitle).toHaveBeenCalledWith("...");
+            expect(mockTvClient.request).not.toHaveBeenCalled();
+        });
+
+        it("sends switchInput request and restores title after connecting from disconnected", async () => {
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
+            mockTvClient.request.mockResolvedValue(undefined);
+            const ev = makeKeyDownEvent({ inputId: "HDMI_1", inputLabel: "PlayStation" });
+            await action.onKeyDown(ev as never);
+            expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
+            expect(mockTvClient.reconnect).toHaveBeenCalled();
+            expect(mockTvClient.request).toHaveBeenCalledWith("ssap://tv/switchInput", { inputId: "HDMI_1" });
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("PlayStation");
+        });
+
         it("sends switchInput request when connected", async () => {
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
             const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);
@@ -154,6 +169,7 @@ describe("SetInput", () => {
 
         it("passes the correct inputId in the request payload", async () => {
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockResolvedValue(undefined);
             const ev = makeKeyDownEvent({ inputId: "HDMI_2" });
             await action.onKeyDown(ev as never);
@@ -163,6 +179,7 @@ describe("SetInput", () => {
         it("shows '!' and restores inputLabel after request failure", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
             const ev = makeKeyDownEvent({ inputId: "HDMI_1", inputLabel: "PlayStation" });
             await action.onKeyDown(ev as never);
@@ -175,6 +192,7 @@ describe("SetInput", () => {
         it("shows '!' and restores inputId when no inputLabel after request failure", async () => {
             vi.useFakeTimers();
             mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
             const ev = makeKeyDownEvent({ inputId: "HDMI_1" });
             await action.onKeyDown(ev as never);

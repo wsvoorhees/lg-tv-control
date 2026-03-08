@@ -79,6 +79,29 @@ export class TvClient extends EventEmitter {
         if (this._ip) this.connect(this._ip);
     }
 
+    waitForConnected(timeoutMs = 15000): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this._state === "connected") { resolve(); return; }
+            if (this._state === "disconnected") { reject(new Error("Not connecting")); return; }
+
+            let settled = false;
+            const cleanup = () => {
+                settled = true;
+                clearTimeout(timer);
+                this.off("stateChange", onStateChange);
+            };
+            const onStateChange = (state: ConnectionState) => {
+                if (settled) return;
+                if (state === "connected") { cleanup(); resolve(); }
+                else if (state === "disconnected") { cleanup(); reject(new Error("Connection failed")); }
+            };
+            const timer = setTimeout(() => {
+                if (!settled) { cleanup(); reject(new Error("Connection timeout")); }
+            }, timeoutMs);
+            this.on("stateChange", onStateChange);
+        });
+    }
+
     async wakeOnLan(): Promise<void> {
         if (!this._mac) return;
         try {

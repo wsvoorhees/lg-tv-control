@@ -6,10 +6,11 @@ export class MediaPlayPause extends SingletonAction {
     private _playing = false;
 
     override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
-        if (tvClient.state !== "connected") return;
+        if (tvClient.state === "disconnected") { tvClient.wakeOnLan(); tvClient.reconnect(); }
         const wasPlaying = this._playing;
         this._playing = !wasPlaying;
         try {
+            await tvClient.waitForConnected();
             await tvClient.request(wasPlaying ? "ssap://media.controls/pause" : "ssap://media.controls/play");
         } catch {
             this._playing = wasPlaying; // revert on failure
