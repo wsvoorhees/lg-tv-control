@@ -64,11 +64,23 @@ describe("TvClient", () => {
             expect(listener).toHaveBeenCalledWith("connected");
         });
 
-        it("sets state to disconnected on close event", () => {
+        it("sets state to disconnected on close event when previously connected", () => {
             client.connect("192.168.1.1");
             mockLgtvInstance.emit("connect");
             mockLgtvInstance.emit("close");
             expect(client.state).toBe("disconnected");
+        });
+
+        it("does not oscillate through disconnected on close during initial connect retry", () => {
+            // lgtv2 fires close→connecting pairs during retry; state must stay "connecting"
+            // to avoid the button flashing "Off" every 5 s
+            const listener = vi.fn();
+            client.on("stateChange", listener);
+            client.connect("192.168.1.1");
+            listener.mockClear();
+            mockLgtvInstance.emit("close");
+            expect(client.state).toBe("connecting");
+            expect(listener).not.toHaveBeenCalled();
         });
 
         it("sets state to disconnected on error event", () => {
@@ -261,7 +273,8 @@ describe("TvClient", () => {
 
         it("reconnects using the stored IP after a connection drop", () => {
             client.connect("192.168.1.1");
-            // Simulate lgtv2 losing the connection (state → disconnected, _ip still set)
+            // Simulate a successful connection followed by a drop
+            mockLgtvInstance.emit("connect");
             mockLgtvInstance.emit("close");
             expect(client.state).toBe("disconnected");
 

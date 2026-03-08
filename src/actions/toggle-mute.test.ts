@@ -71,5 +71,25 @@ describe("ToggleMute", () => {
             mockTvClient.request.mockRejectedValue(new Error("TV error"));
             await expect(action.onKeyDown({} as never)).resolves.toBeUndefined();
         });
+
+        it("ignores a second press while a getMute/setMute sequence is in flight", async () => {
+            mockTvClient.state = "connected";
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
+            // If second press were NOT dropped, it would consume requests 3 and 4
+            mockTvClient.request
+                .mockResolvedValueOnce({ mute: false }) // first press getMute
+                .mockResolvedValueOnce(undefined)       // first press setMute
+                .mockResolvedValueOnce({ mute: true })  // second press getMute (must NOT run)
+                .mockResolvedValueOnce(undefined);      // second press setMute (must NOT run)
+
+            const first = action.onKeyDown({} as never);
+            const second = action.onKeyDown({} as never); // in-flight, should be dropped
+            await Promise.all([first, second]);
+
+            // Only the first press's two requests should have been made
+            expect(mockTvClient.request).toHaveBeenCalledTimes(2);
+            expect(mockTvClient.request).toHaveBeenNthCalledWith(1, "ssap://audio/getMute");
+            expect(mockTvClient.request).toHaveBeenNthCalledWith(2, "ssap://audio/setMute", { mute: true });
+        });
     });
 });

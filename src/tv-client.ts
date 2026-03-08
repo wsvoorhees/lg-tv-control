@@ -44,7 +44,13 @@ export class TvClient extends EventEmitter {
         });
 
         this.client.on("close", () => {
-            if (id === this._connectionId) this._setState("disconnected");
+            if (id !== this._connectionId) return;
+            // Only drop to "disconnected" when a previously-established connection closes.
+            // During initial-connect retry cycles, lgtv2 fires close→connecting pairs every
+            // 5 s — transitioning through "disconnected" here causes the button to flash "Off"
+            // and can trigger action handlers that call reconnect() unnecessarily.
+            // The _connectTimeout handles state→"disconnected" when connecting takes too long.
+            if (this._state === "connected") this._setState("disconnected");
         });
 
         this.client.on("error", (_err: Error) => {
@@ -113,11 +119,12 @@ export class TvClient extends EventEmitter {
     }
 
     async wakeOnLan(): Promise<void> {
-        if (!this._mac) return;
-        streamDeck.logger.debug(`[TvClient] wakeOnLan: ${this._mac}`);
+        const mac = this._mac;
+        if (!mac) return;
+        streamDeck.logger.debug(`[TvClient] wakeOnLan: ${mac}`);
         try {
             const { wake } = await import("wol") as unknown as { wake: (mac: string) => Promise<boolean> };
-            await wake(this._mac);
+            await wake(mac);
             streamDeck.logger.debug("[TvClient] wakeOnLan: packet sent");
         } catch { /* ignore */ }
     }

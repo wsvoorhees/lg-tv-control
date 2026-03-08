@@ -110,11 +110,16 @@ describe("TogglePower", () => {
             expect(mockTvClient.reconnect).not.toHaveBeenCalled();
         });
 
-        it("calls wakeOnLan and reconnect when disconnected", async () => {
+        it("calls wakeOnLan and reconnect when disconnected, awaiting wakeOnLan before reconnect", async () => {
             mockTvClient.state = "disconnected";
+            const order: string[] = [];
+            mockTvClient.wakeOnLan.mockImplementation(() => {
+                order.push("wakeOnLan");
+                return Promise.resolve();
+            });
+            mockTvClient.reconnect.mockImplementation(() => { order.push("reconnect"); });
             await action.onKeyDown({} as never);
-            expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
-            expect(mockTvClient.reconnect).toHaveBeenCalled();
+            expect(order).toEqual(["wakeOnLan", "reconnect"]);
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
 
