@@ -70,7 +70,7 @@ describe("scanForTVs", () => {
         vi.useRealTimers();
     });
 
-    it("does not set a name for non-webOS devices", async () => {
+    it("excludes non-webOS devices from results", async () => {
         vi.useFakeTimers();
 
         const promise = scanForTVs();
@@ -78,7 +78,7 @@ describe("scanForTVs", () => {
         await vi.advanceTimersByTimeAsync(6000);
         const result = await promise;
 
-        expect(result[0].name).toBeUndefined();
+        expect(result).toHaveLength(0);
 
         vi.useRealTimers();
     });

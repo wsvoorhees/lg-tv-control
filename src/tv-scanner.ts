@@ -53,11 +53,11 @@ export function scanForTVs(): Promise<DiscoveredTV[]> {
 
         setTimeout(async () => {
             client.stop();
+            const webOSCandidates = Array.from(found.values()).filter(c => c.isWebOS);
             const tvs = await Promise.all(
-                Array.from(found.values()).map(async ({ ip, isWebOS, locationUrl }) => {
+                webOSCandidates.map(async ({ ip, locationUrl }) => {
                     const friendlyName = locationUrl ? await fetchFriendlyName(locationUrl) : undefined;
-                    const name = friendlyName ?? (isWebOS ? "LG TV" : undefined);
-                    return { ip, name };
+                    return { ip, name: friendlyName ?? "LG TV" };
                 })
             );
             streamDeck.logger.info("SSDP scan complete", { tvs });
