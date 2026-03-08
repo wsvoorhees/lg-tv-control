@@ -8,6 +8,7 @@ export class TogglePower extends StatefulTvAction {
         if (tvClient.state === "connected") {
             try { await tvClient.request("ssap://system/turnOff"); } catch { /* ignore */ }
         } else if (tvClient.state === "disconnected") {
+            tvClient.wakeOnLan();
             tvClient.reconnect();
         }
         // If "connecting", do nothing and let the connection complete

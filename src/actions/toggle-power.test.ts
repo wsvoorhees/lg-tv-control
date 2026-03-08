@@ -6,6 +6,7 @@ const { mockTvClient, stateChangeListeners } = vi.hoisted(() => {
     const mockTvClient = {
         state: "disconnected" as ConnectionState,
         reconnect: vi.fn(),
+        wakeOnLan: vi.fn(),
         request: vi.fn(),
         on: vi.fn((event: string, listener: (state: ConnectionState) => void) => {
             if (event === "stateChange") stateChangeListeners.push(listener);
@@ -109,9 +110,10 @@ describe("TogglePower", () => {
             expect(mockTvClient.reconnect).not.toHaveBeenCalled();
         });
 
-        it("calls reconnect when disconnected", async () => {
+        it("calls wakeOnLan and reconnect when disconnected", async () => {
             mockTvClient.state = "disconnected";
             await action.onKeyDown({} as never);
+            expect(mockTvClient.wakeOnLan).toHaveBeenCalled();
             expect(mockTvClient.reconnect).toHaveBeenCalled();
             expect(mockTvClient.request).not.toHaveBeenCalled();
         });
