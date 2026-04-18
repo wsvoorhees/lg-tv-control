@@ -10,7 +10,6 @@
 <body>
     <sdpi-item label="TV">
         <sdpi-select id="tv-picker">
-            <option value="">Default TV</option>
         </sdpi-select>
     </sdpi-item>
 
@@ -68,7 +67,7 @@
 
         sd.sendToPropertyInspector.subscribe(({ payload }) => {
             if (payload.event === 'tvList') {
-                tvPicker.innerHTML = '<option value="">Default TV</option>';
+                tvPicker.innerHTML = '';
                 (payload.tvs ?? []).forEach(tv => {
                     const opt = document.createElement('option');
                     opt.value = tv.id;
