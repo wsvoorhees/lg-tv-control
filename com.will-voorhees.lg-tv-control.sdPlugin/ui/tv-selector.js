@@ -190,7 +190,6 @@ function initTvSelector() {
                 <div class="tv-entry-info">
                     <span class="tv-connection-dot ${tv.state ?? 'disconnected'}" id="dot-${tv.id}"></span>
                     <span class="tv-entry-name">${escHtml(tv.name)}</span>
-                    <span class="tv-entry-ip">${escHtml(tv.ip)}</span>
                 </div>
                 <div class="tv-entry-btns">
                     <button class="pi-btn pi-btn-sm" data-action="edit" data-id="${tv.id}">Edit</button>
