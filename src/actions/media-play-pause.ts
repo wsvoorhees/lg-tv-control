@@ -2,7 +2,7 @@ import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
 import type { BaseTvActionSettings } from "../types";
 import { resolveClient, wakeAndReconnect } from "./action-helpers";
 
-@action({ UUID: "com.will-voorhees.lg-tv-control.media-play-pause" })
+@action({ UUID: "com.will-voorhees.smart-tv-control.media-play-pause" })
 export class MediaPlayPause extends SingletonAction<BaseTvActionSettings> {
     private _playing = false;
 

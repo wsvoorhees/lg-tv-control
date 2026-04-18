@@ -2,7 +2,7 @@ import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
 import type { BaseTvActionSettings } from "../types";
 import { resolveClient, wakeAndReconnect } from "./action-helpers";
 
-@action({ UUID: "com.will-voorhees.lg-tv-control.media-fast-forward" })
+@action({ UUID: "com.will-voorhees.smart-tv-control.media-fast-forward" })
 export class MediaFastForward extends SingletonAction<BaseTvActionSettings> {
     override async onKeyDown(ev: KeyDownEvent<BaseTvActionSettings>): Promise<void> {
         const client = resolveClient(ev.payload.settings?.tvId);

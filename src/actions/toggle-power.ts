@@ -3,7 +3,7 @@ import type { BaseTvActionSettings } from "../types";
 import { resolveClient, wakeAndReconnect } from "./action-helpers";
 import { StatefulTvAction } from "./stateful-tv-action";
 
-@action({ UUID: "com.will-voorhees.lg-tv-control.toggle-power" })
+@action({ UUID: "com.will-voorhees.smart-tv-control.toggle-power" })
 export class TogglePower extends StatefulTvAction {
     override async onKeyDown(ev: KeyDownEvent<BaseTvActionSettings>): Promise<void> {
         const client = resolveClient(ev.payload.settings?.tvId);

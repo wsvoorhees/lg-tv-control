@@ -1,4 +1,4 @@
-# LG TV Control — Stream Deck Plugin
+# Smart TV Controller — Stream Deck Plugin
 
 **Version 0.10.0.0**
 

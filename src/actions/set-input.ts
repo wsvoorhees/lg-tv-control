@@ -7,7 +7,7 @@ type SetInputSettings = BaseTvActionSettings & {
     inputLabel?: string;
 };
 
-@action({ UUID: "com.will-voorhees.lg-tv-control.set-input" })
+@action({ UUID: "com.will-voorhees.smart-tv-control.set-input" })
 export class SetInput extends SingletonAction<SetInputSettings> {
     override onWillAppear(ev: WillAppearEvent<SetInputSettings>): void {
         const { inputLabel, inputId } = ev.payload.settings;

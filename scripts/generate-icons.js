@@ -9,7 +9,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const OUT = "com.will-voorhees.lg-tv-control.sdPlugin/imgs/actions";
+const OUT = "com.will-voorhees.smart-tv-control.sdPlugin/imgs/actions";
 
 // Background matching the Stream Deck dark navy style
 const BG = `<rect width="72" height="72" rx="8" fill="#1d2133"/>`;

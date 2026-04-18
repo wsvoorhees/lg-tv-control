@@ -3,7 +3,7 @@
  */
 import { readFileSync, writeFileSync } from "node:fs";
 
-const MANIFEST = "com.will-voorhees.lg-tv-control.sdPlugin/manifest.json";
+const MANIFEST = "com.will-voorhees.smart-tv-control.sdPlugin/manifest.json";
 
 // Map from action UUID suffix → icon folder name
 const ACTION_ICONS = {

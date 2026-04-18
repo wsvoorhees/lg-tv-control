@@ -2,7 +2,7 @@ import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
 import type { BaseTvActionSettings } from "../types";
 import { resolveClient, wakeAndReconnect } from "./action-helpers";
 
-@action({ UUID: "com.will-voorhees.lg-tv-control.toggle-mute" })
+@action({ UUID: "com.will-voorhees.smart-tv-control.toggle-mute" })
 export class ToggleMute extends SingletonAction<BaseTvActionSettings> {
     private _inFlight = false;
 

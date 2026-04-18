@@ -7,7 +7,7 @@ type LaunchAppSettings = BaseTvActionSettings & {
     appLabel?: string;
 };
 
-@action({ UUID: "com.will-voorhees.lg-tv-control.launch-app" })
+@action({ UUID: "com.will-voorhees.smart-tv-control.launch-app" })
 export class LaunchApp extends SingletonAction<LaunchAppSettings> {
     override onWillAppear(ev: WillAppearEvent<LaunchAppSettings>): void {
         const { appLabel, appId } = ev.payload.settings;

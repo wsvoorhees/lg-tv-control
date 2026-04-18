@@ -7,7 +7,7 @@ import path from "node:path";
 import url from "node:url";
 
 const isWatching = !!process.env.ROLLUP_WATCH;
-const sdPlugin = "com.will-voorhees.lg-tv-control.sdPlugin";
+const sdPlugin = "com.will-voorhees.smart-tv-control.sdPlugin";
 
 /**
  * @type {import('rollup').RollupOptions}
