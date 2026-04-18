@@ -192,8 +192,8 @@ function initTvSelector() {
                     <span class="tv-entry-name">${escHtml(tv.name)}</span>
                 </div>
                 <div class="tv-entry-btns">
-                    <button class="pi-btn pi-btn-sm" data-action="edit" data-id="${tv.id}">Edit</button>
                     <button class="pi-btn pi-btn-sm" data-action="connect" data-id="${tv.id}">Connect</button>
+                    <button class="pi-btn pi-btn-sm" data-action="edit" data-id="${tv.id}">Edit</button>
                     <button class="pi-btn pi-btn-sm" data-action="remove" data-id="${tv.id}">✕</button>
                 </div>
             </div>
