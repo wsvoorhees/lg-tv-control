@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <title>TV Action</title>
+    <meta charset="utf-8" />
+    <script src="sdpi-components.js"></script>
+</head>
+
+<body>
+    <sdpi-item label="TV">
+        <sdpi-select id="tv-picker">
+            <option value="">Default TV</option>
+        </sdpi-select>
+    </sdpi-item>
+
+    <div id="tv-selector-root"></div>
+
+    <script>
+        const sd = SDPIComponents.streamDeckClient;
+        let currentSettings = {};
+
+        sd.didReceiveSettings.subscribe(({ payload }) => {
+            currentSettings = { ...payload.settings };
+        });
+
+        const tvPicker = document.getElementById('tv-picker');
+        tvPicker.addEventListener('valuechange', () => {
+            const tvId = tvPicker.value || undefined;
+            currentSettings = { ...currentSettings, tvId };
+            sd.setSettings(currentSettings);
+        });
+
+        sd.sendToPropertyInspector.subscribe(({ payload }) => {
+            if (payload.event !== 'tvList') return;
+            tvPicker.innerHTML = '<option value="">Default TV</option>';
+            (payload.tvs ?? []).forEach(tv => {
+                const opt = document.createElement('option');
+                opt.value = tv.id;
+                opt.textContent = tv.name;
+                if (tv.id === currentSettings.tvId) opt.selected = true;
+                tvPicker.appendChild(opt);
+            });
+        });
+    </script>
+
+    <script src="tv-selector.js"></script>
+</body>
+
+</html>

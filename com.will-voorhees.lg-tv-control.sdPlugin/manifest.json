@@ -8,7 +8,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.toggle-power",
 			"Icon": "imgs/actions/toggle-power/icon",
 			"Tooltip": "Toggles the LG TV on or off.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -24,7 +24,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.power-on",
 			"Icon": "imgs/actions/power-on/icon",
 			"Tooltip": "Connects to the LG TV, waking it from standby.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -40,7 +40,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.turn-off",
 			"Icon": "imgs/actions/turn-off/icon",
 			"Tooltip": "Turns the LG TV off.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -72,7 +72,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.volume-up",
 			"Icon": "imgs/actions/volume-up/icon",
 			"Tooltip": "Increases the TV volume.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -88,7 +88,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.volume-down",
 			"Icon": "imgs/actions/volume-down/icon",
 			"Tooltip": "Decreases the TV volume.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -104,7 +104,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.toggle-mute",
 			"Icon": "imgs/actions/toggle-mute/icon",
 			"Tooltip": "Toggles the TV mute state.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -120,7 +120,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.media-play",
 			"Icon": "imgs/actions/media-play/icon",
 			"Tooltip": "Sends the play command to the TV.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -136,7 +136,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.media-pause",
 			"Icon": "imgs/actions/media-pause/icon",
 			"Tooltip": "Sends the pause command to the TV.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -152,7 +152,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.media-play-pause",
 			"Icon": "imgs/actions/media-play-pause/icon",
 			"Tooltip": "Toggles between play and pause.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -168,7 +168,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.media-stop",
 			"Icon": "imgs/actions/media-stop/icon",
 			"Tooltip": "Sends the stop command to the TV.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -184,7 +184,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.media-rewind",
 			"Icon": "imgs/actions/media-rewind/icon",
 			"Tooltip": "Sends the rewind command to the TV.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
@@ -200,7 +200,7 @@
 			"UUID": "com.will-voorhees.lg-tv-control.media-fast-forward",
 			"Icon": "imgs/actions/media-fast-forward/icon",
 			"Tooltip": "Sends the fast forward command to the TV.",
-			"PropertyInspectorPath": "ui/tv-connection.html",
+			"PropertyInspectorPath": "ui/tv-action.html",
 			"Controllers": [
 				"Keypad"
 			],
