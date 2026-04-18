@@ -8,6 +8,7 @@ export class TurnOff extends StatefulTvAction {
     override async onKeyDown(ev: KeyDownEvent<BaseTvActionSettings>): Promise<void> {
         const client = resolveClient(ev.payload.settings?.tvId);
         if (!client) return;
+        // No WOL: no point waking a TV just to turn it off
         if (client.state === "disconnected") client.reconnect();
         try {
             await client.waitForConnected();

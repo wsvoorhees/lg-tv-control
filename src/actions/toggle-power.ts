@@ -11,6 +11,8 @@ export class TogglePower extends StatefulTvAction {
         if (client.state === "connected") {
             try { await client.request("ssap://system/turnOff"); } catch { /* ignore */ }
         } else if (client.state === "disconnected") {
+            // Inlined rather than wakeAndReconnect(): the connected branch above means
+            // this isn't a simple "if disconnected" guard — the state check is load-bearing
             await client.wakeOnLan();
             client.reconnect();
         }
