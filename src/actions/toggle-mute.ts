@@ -7,8 +7,8 @@ export class ToggleMute extends SingletonAction {
 
     override async onKeyDown(_ev: KeyDownEvent): Promise<void> {
         if (this._inFlight) return;
-        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
         this._inFlight = true;
+        if (tvClient.state === "disconnected") { await tvClient.wakeOnLan(); tvClient.reconnect(); }
         try {
             await tvClient.waitForConnected();
             const res = await tvClient.request("ssap://audio/getMute") as { mute: boolean };
