@@ -1,6 +1,6 @@
 import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
 import type { BaseTvActionSettings } from "../types";
-import { resolveClient } from "./action-helpers";
+import { resolveClient, wakeAndReconnect } from "./action-helpers";
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.toggle-mute" })
 export class ToggleMute extends SingletonAction<BaseTvActionSettings> {
@@ -11,7 +11,7 @@ export class ToggleMute extends SingletonAction<BaseTvActionSettings> {
         if (!client) return;
         if (this._inFlight) return;
         this._inFlight = true;
-        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
+        await wakeAndReconnect(client);
         try {
             await client.waitForConnected();
             const res = await client.request("ssap://audio/getMute") as { mute: boolean };

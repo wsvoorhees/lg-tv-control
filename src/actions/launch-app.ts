@@ -1,6 +1,6 @@
 import { action, DidReceiveSettingsEvent, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
 import type { BaseTvActionSettings } from "../types";
-import { resolveClient } from "./action-helpers";
+import { resolveClient, wakeAndReconnect } from "./action-helpers";
 
 type LaunchAppSettings = BaseTvActionSettings & {
     appId?: string;
@@ -31,7 +31,7 @@ export class LaunchApp extends SingletonAction<LaunchAppSettings> {
         const client = resolveClient(tvId);
         if (!client) return;
 
-        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
+        await wakeAndReconnect(client);
         const needsWait = client.state !== "connected";
         if (needsWait) ev.action.setTitle("...");
 

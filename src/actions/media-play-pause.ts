@@ -1,6 +1,6 @@
 import { action, KeyDownEvent, SingletonAction } from "@elgato/streamdeck";
 import type { BaseTvActionSettings } from "../types";
-import { resolveClient } from "./action-helpers";
+import { resolveClient, wakeAndReconnect } from "./action-helpers";
 
 @action({ UUID: "com.will-voorhees.lg-tv-control.media-play-pause" })
 export class MediaPlayPause extends SingletonAction<BaseTvActionSettings> {
@@ -9,7 +9,7 @@ export class MediaPlayPause extends SingletonAction<BaseTvActionSettings> {
     override async onKeyDown(ev: KeyDownEvent<BaseTvActionSettings>): Promise<void> {
         const client = resolveClient(ev.payload.settings?.tvId);
         if (!client) return;
-        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
+        await wakeAndReconnect(client);
         const wasPlaying = this._playing;
         this._playing = !wasPlaying;
         try {
