@@ -151,7 +151,7 @@ export class TvClient extends EventEmitter {
                     if (attempt >= 10) this.disconnect();
                     else this._setState("disconnected");
                 }
-            }, 10000);
+            }, 7000);
         }
         this.emit("stateChange", state);
     }
