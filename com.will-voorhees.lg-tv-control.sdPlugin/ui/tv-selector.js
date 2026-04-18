@@ -11,7 +11,7 @@ if (tvSelectorRoot) {
             <div class="tv-config-group-header">
                 <span class="tv-config-group-label">TV Configuration</span>
             </div>
-            <div class="tv-config-group-label" id="form-section-label" style="margin-bottom:6px">Configured TVs:</div>
+            <div class="tv-config-group-label" style="margin-bottom:6px">Configured TVs:</div>
             <div id="tv-list"><p class="pi-status">Loading...</p></div>
             <hr class="tv-config-separator">
             <div class="tv-config-group-label" id="form-section-label" style="margin-bottom:6px">Add TV</div>
