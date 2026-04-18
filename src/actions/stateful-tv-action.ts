@@ -1,4 +1,4 @@
-import { SingletonAction, WillAppearEvent, WillDisappearEvent } from "@elgato/streamdeck";
+import { SingletonAction, WillAppearEvent, WillDisappearEvent, DidReceiveSettingsEvent } from "@elgato/streamdeck";
 import { tvClientPool } from "../tv-client-pool";
 import type { ConnectionState } from "../tv-client";
 import type { BaseTvActionSettings } from "../types";
@@ -19,22 +19,11 @@ export abstract class StatefulTvAction extends SingletonAction<BaseTvActionSetti
     private _handlers = new Map<string, (id: string, state: ConnectionState) => void>();
 
     override onWillAppear(ev: WillAppearEvent<BaseTvActionSettings>): void {
-        const actionId = ev.action.id;
-        const { tvId } = ev.payload.settings;
-        const client = resolveClient(tvId);
-        ev.action.setTitle(STATE_LABELS[client?.state ?? "disconnected"]);
+        this._register(ev.action, ev.payload.settings?.tvId);
+    }
 
-        const existing = this._handlers.get(actionId);
-        if (existing) tvClientPool.off("stateChange", existing);
-
-        const targetId = tvId ?? tvClientPool.getDefaultId();
-        const handler = (changedId: string, state: ConnectionState) => {
-            if (changedId === targetId) {
-                ev.action.setTitle(STATE_LABELS[state]);
-            }
-        };
-        this._handlers.set(actionId, handler);
-        tvClientPool.on("stateChange", handler);
+    override onDidReceiveSettings(ev: DidReceiveSettingsEvent<BaseTvActionSettings>): void {
+        this._register(ev.action, ev.payload.settings?.tvId);
     }
 
     override onWillDisappear(ev: WillDisappearEvent): void {
@@ -44,5 +33,26 @@ export abstract class StatefulTvAction extends SingletonAction<BaseTvActionSetti
             tvClientPool.off("stateChange", handler);
             this._handlers.delete(actionId);
         }
+    }
+
+    private _register(action: { id: string; setTitle(t: string): void }, tvId: string | undefined): void {
+        const actionId = action.id;
+        const client = resolveClient(tvId);
+        action.setTitle(STATE_LABELS[client?.state ?? "disconnected"]);
+
+        const existing = this._handlers.get(actionId);
+        if (existing) tvClientPool.off("stateChange", existing);
+
+        // Resolve targetId dynamically so stateChange events are matched correctly
+        // even if getDefaultId() was not yet available when the handler was registered
+        // (onWillAppear fires before tvClientPool.configure() runs at startup).
+        const handler = (changedId: string, state: ConnectionState) => {
+            const targetId = tvId ?? tvClientPool.getDefaultId();
+            if (changedId === targetId) {
+                action.setTitle(STATE_LABELS[state]);
+            }
+        };
+        this._handlers.set(actionId, handler);
+        tvClientPool.on("stateChange", handler);
     }
 }

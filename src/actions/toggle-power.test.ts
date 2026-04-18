@@ -32,8 +32,12 @@ vi.mock("@elgato/streamdeck", () => ({
 
 import { TogglePower } from "./toggle-power.js";
 
-function makeWillAppearEvent(id = "action-id") {
-    return { action: { id, setTitle: vi.fn() }, payload: { settings: {} } };
+function makeWillAppearEvent(id = "action-id", tvId?: string) {
+    return { action: { id, setTitle: vi.fn() }, payload: { settings: tvId ? { tvId } : {} } };
+}
+
+function makeDidReceiveSettingsEvent(id = "action-id", tvId?: string) {
+    return { action: { id, setTitle: vi.fn() }, payload: { settings: tvId ? { tvId } : {} } };
 }
 
 describe("TogglePower", () => {
@@ -79,6 +83,30 @@ describe("TogglePower", () => {
             action.onWillAppear(ev as never);
             poolStateChangeListeners[0]("default-id", "connected");
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
+        });
+
+        it("updates title when stateChange fires after getDefaultId was undefined at appearance time", () => {
+            mockTvClientPool.getDefaultId.mockReturnValue(undefined); // simulate pre-configure startup
+            const ev = makeWillAppearEvent();
+            action.onWillAppear(ev as never);
+            mockTvClientPool.getDefaultId.mockReturnValue("default-id"); // configure() has now run
+            poolStateChangeListeners[0]("default-id", "connected");
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
+        });
+
+        it("re-registers listener and updates title when settings change via onDidReceiveSettings", () => {
+            const ev = makeWillAppearEvent("action-id");
+            action.onWillAppear(ev as never);
+            const firstHandler = poolStateChangeListeners[0];
+
+            const ev2 = makeDidReceiveSettingsEvent("action-id", "tv-2");
+            mockTvClientPool.get.mockImplementation((id: string) => id === "tv-2" ? { ...mockTvClient, state: "connected" as const } : undefined);
+            action.onDidReceiveSettings(ev2 as never);
+
+            expect(mockTvClientPool.off).toHaveBeenCalledWith("stateChange", firstHandler);
+            expect(ev2.action.setTitle).toHaveBeenCalledWith("On");
+            poolStateChangeListeners[1]("tv-2", "disconnected");
+            expect(ev2.action.setTitle).toHaveBeenLastCalledWith("Off");
         });
 
         it("replaces old listener when onWillAppear is called again for same instance", () => {
