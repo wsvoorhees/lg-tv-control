@@ -265,14 +265,15 @@ function initTvSelector() {
         resetForm();
     });
 
-    // When user picks a found TV from the scan dropdown, fill the IP (and name) inputs
-    scanSelect.addEventListener('change', (e) => {
-        const idx = parseInt(e.target.value, 10);
+    // When user picks a found TV from the scan dropdown, fill the Add TV fields.
+    // sdpi-select dispatches "valuechange" (not "change") when its selection changes.
+    scanSelect.addEventListener('valuechange', () => {
+        const idx = parseInt(scanSelect.value, 10);
         if (isNaN(idx) || idx < 0) return;
         const found = scanResults[idx];
         if (!found) return;
         ipInput.value = found.ip;
-        if (found.name && !nameInput.value.trim()) nameInput.value = found.name;
+        nameInput.value = found.name || '';
     });
 
     scanBtn.addEventListener('click', () => {
