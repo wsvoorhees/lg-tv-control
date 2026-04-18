@@ -192,7 +192,7 @@ function initTvSelector() {
                     <span class="tv-entry-name">${escHtml(tv.name)}</span>
                 </div>
                 <div class="tv-entry-btns">
-                    <button class="pi-btn pi-btn-sm" data-action="connect" data-id="${tv.id}">Connect</button>
+                    <button class="pi-btn pi-btn-sm" data-action="connect" data-id="${tv.id}" id="connect-btn-${tv.id}">${tv.state === 'connected' ? 'Disconnect' : 'Connect'}</button>
                     <button class="pi-btn pi-btn-sm" data-action="edit" data-id="${tv.id}">Edit</button>
                     <button class="pi-btn pi-btn-sm" data-action="remove" data-id="${tv.id}">✕</button>
                 </div>
@@ -203,6 +203,8 @@ function initTvSelector() {
     function updateConnectionDot(id, state) {
         const dot = document.getElementById(`dot-${id}`);
         if (dot) dot.className = `tv-connection-dot ${state}`;
+        const btn = document.getElementById(`connect-btn-${id}`);
+        if (btn) btn.textContent = state === 'connected' ? 'Disconnect' : 'Connect';
     }
 
     function startEdit(id) {
@@ -243,7 +245,8 @@ function initTvSelector() {
         if (btn.dataset.action === 'edit') {
             startEdit(id);
         } else if (btn.dataset.action === 'connect') {
-            sd.send('sendToPlugin', { event: 'connectTv', id });
+            const tv = tvList.find(t => t.id === id);
+            sd.send('sendToPlugin', { event: tv?.state === 'connected' ? 'disconnectTv' : 'connectTv', id });
         } else if (btn.dataset.action === 'remove') {
             sd.send('sendToPlugin', { event: 'removeTv', id });
             if (editingId === id) resetForm();

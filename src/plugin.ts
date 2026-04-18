@@ -134,6 +134,14 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
         return;
     }
 
+    if (payload.event === "disconnectTv") {
+        const { id } = payload as { id?: string };
+        const client = id ? tvClientPool.get(id) : undefined;
+        if (!client) return;
+        client.disconnect();
+        return;
+    }
+
     if (payload.event === "scanForTVs") {
         streamDeck.logger.info("TV scan started");
         try {
