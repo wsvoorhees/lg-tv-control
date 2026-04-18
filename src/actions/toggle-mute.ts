@@ -10,8 +10,8 @@ export class ToggleMute extends SingletonAction<BaseTvActionSettings> {
         const client = resolveClient(ev.payload.settings?.tvId);
         if (!client) return;
         if (this._inFlight) return;
-        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
         this._inFlight = true;
+        if (client.state === "disconnected") { await client.wakeOnLan(); client.reconnect(); }
         try {
             await client.waitForConnected();
             const res = await client.request("ssap://audio/getMute") as { mute: boolean };
