@@ -1,10 +1,15 @@
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 import { Client, SsdpHeaders } from "node-ssdp";
 import type { RemoteInfo } from "dgram";
 import streamDeck from "@elgato/streamdeck";
 
+const execAsync = promisify(exec);
+
 export type DiscoveredTV = {
     ip: string;
     name?: string;
+    mac?: string;
 };
 
 type TVCandidate = {
@@ -15,6 +20,21 @@ type TVCandidate = {
 
 const LG_WEBOS_ST = "urn:dial-multiscreen-org:service:dial:1";
 const SCAN_TIMEOUT_MS = 6000;
+
+async function getMacAddress(ip: string): Promise<string | undefined> {
+    try {
+        const cmd = process.platform === "win32" ? `arp -a ${ip}` : `arp -n ${ip}`;
+        const { stdout } = await execAsync(cmd);
+        for (const line of stdout.split(/\r?\n/)) {
+            if (!line.includes(ip)) continue;
+            const m = line.match(/([0-9a-f]{2}[:-]){5}[0-9a-f]{2}/i);
+            if (m) return m[0].replace(/-/g, ":").toUpperCase();
+        }
+        return undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 async function fetchFriendlyName(locationUrl: string): Promise<string | undefined> {
     try {
@@ -56,8 +76,11 @@ export function scanForTVs(): Promise<DiscoveredTV[]> {
             const webOSCandidates = Array.from(found.values()).filter(c => c.isWebOS);
             const tvs = await Promise.all(
                 webOSCandidates.map(async ({ ip, locationUrl }) => {
-                    const friendlyName = locationUrl ? await fetchFriendlyName(locationUrl) : undefined;
-                    return { ip, name: friendlyName ?? "LG TV" };
+                    const [friendlyName, mac] = await Promise.all([
+                        locationUrl ? fetchFriendlyName(locationUrl) : Promise.resolve(undefined),
+                        getMacAddress(ip),
+                    ]);
+                    return { ip, name: friendlyName ?? "LG TV", mac };
                 })
             );
             streamDeck.logger.info("SSDP scan complete", { tvs });

@@ -274,6 +274,7 @@ function initTvSelector() {
         if (!found) return;
         ipInput.value = found.ip;
         nameInput.value = found.name || '';
+        macInput.value = found.mac || '';
     });
 
     scanBtn.addEventListener('click', () => {

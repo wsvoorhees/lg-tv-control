@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { EventEmitter } from "node:events";
 
+const mockExec = vi.hoisted(() => vi.fn());
+
+vi.mock("node:child_process", () => ({ exec: mockExec }));
+
 // Mock node-ssdp before importing the module under test
 const mockClientInstance = new EventEmitter() as EventEmitter & { search: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn> };
 mockClientInstance.search = vi.fn();
@@ -15,6 +19,18 @@ vi.mock("@elgato/streamdeck", () => ({
     default: { logger: { info: vi.fn(), error: vi.fn() } },
 }));
 
+function mockArp(stdout: string) {
+    mockExec.mockImplementation((_cmd: string, cb: (err: null, result: { stdout: string }) => void) => {
+        cb(null, { stdout });
+    });
+}
+
+function mockArpFailure() {
+    mockExec.mockImplementation((_cmd: string, cb: (err: Error) => void) => {
+        cb(new Error("arp failed"));
+    });
+}
+
 import { scanForTVs } from "./tv-scanner.js";
 
 describe("scanForTVs", () => {
@@ -24,6 +40,8 @@ describe("scanForTVs", () => {
         mockClientInstance.removeAllListeners();
         mockClientInstance.search = vi.fn();
         mockClientInstance.stop = vi.fn();
+        // Default: ARP returns no match so mac is undefined
+        mockArp("");
     });
 
     it("resolves with an empty array when no devices respond", async () => {
@@ -183,6 +201,63 @@ describe("scanForTVs", () => {
         await promise;
 
         expect(mockClientInstance.search).toHaveBeenCalledWith("urn:dial-multiscreen-org:service:dial:1");
+
+        vi.useRealTimers();
+    });
+
+    it("includes MAC address from ARP lookup (Windows dash format)", async () => {
+        vi.useFakeTimers();
+        mockArp("  192.168.1.100          aa-bb-cc-dd-ee-ff     dynamic\n");
+
+        const promise = scanForTVs();
+        mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.100" });
+        await vi.advanceTimersByTimeAsync(6000);
+        const result = await promise;
+
+        expect(result[0].mac).toBe("AA:BB:CC:DD:EE:FF");
+
+        vi.useRealTimers();
+    });
+
+    it("includes MAC address from ARP lookup (macOS colon format)", async () => {
+        vi.useFakeTimers();
+        mockArp("? (192.168.1.100) at aa:bb:cc:dd:ee:ff on en0 ifscope [ethernet]\n");
+
+        const promise = scanForTVs();
+        mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.100" });
+        await vi.advanceTimersByTimeAsync(6000);
+        const result = await promise;
+
+        expect(result[0].mac).toBe("AA:BB:CC:DD:EE:FF");
+
+        vi.useRealTimers();
+    });
+
+    it("returns mac undefined when ARP lookup fails", async () => {
+        vi.useFakeTimers();
+        mockArpFailure();
+
+        const promise = scanForTVs();
+        mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.100" });
+        await vi.advanceTimersByTimeAsync(6000);
+        const result = await promise;
+
+        expect(result[0].ip).toBe("192.168.1.100");
+        expect(result[0].mac).toBeUndefined();
+
+        vi.useRealTimers();
+    });
+
+    it("returns mac undefined when ARP output has no matching line", async () => {
+        vi.useFakeTimers();
+        mockArp("  10.0.0.1          aa-bb-cc-dd-ee-ff     dynamic\n");
+
+        const promise = scanForTVs();
+        mockClientInstance.emit("response", { SERVER: "webOS/5.0" }, 200, { address: "192.168.1.100" });
+        await vi.advanceTimersByTimeAsync(6000);
+        const result = await promise;
+
+        expect(result[0].mac).toBeUndefined();
 
         vi.useRealTimers();
     });
