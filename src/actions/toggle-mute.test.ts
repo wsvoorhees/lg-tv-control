@@ -91,5 +91,24 @@ describe("ToggleMute", () => {
             expect(mockTvClient.request).toHaveBeenNthCalledWith(1, "ssap://audio/getMute");
             expect(mockTvClient.request).toHaveBeenNthCalledWith(2, "ssap://audio/setMute", { mute: true });
         });
+
+        it("ignores a second press that arrives during wakeOnLan when disconnected", async () => {
+            let resolveWol!: () => void;
+            mockTvClient.wakeOnLan.mockReturnValue(new Promise<void>(r => { resolveWol = r; }));
+            mockTvClient.waitForConnected.mockResolvedValue(undefined);
+            mockTvClient.request
+                .mockResolvedValueOnce({ mute: false })
+                .mockResolvedValueOnce(undefined);
+
+            const first = action.onKeyDown({} as never);
+            // Second press arrives while first is suspended inside wakeOnLan()
+            const second = action.onKeyDown({} as never);
+            resolveWol();
+            await Promise.all([first, second]);
+
+            // Only the first press should have sent requests
+            expect(mockTvClient.wakeOnLan).toHaveBeenCalledTimes(1);
+            expect(mockTvClient.request).toHaveBeenCalledTimes(2);
+        });
     });
 });
