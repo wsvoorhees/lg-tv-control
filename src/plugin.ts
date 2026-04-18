@@ -67,6 +67,9 @@ async function sendTvList(): Promise<void> {
     } catch { /* PI may not be open */ }
 }
 
+// Push TV list whenever the property inspector opens (the PI's own getTvList fires too early).
+streamDeck.ui.onDidAppear(() => sendTvList());
+
 // Handle messages from the property inspector.
 streamDeck.ui.onSendToPlugin(async (ev) => {
     const payload = ev.payload as { event?: string } & Record<string, unknown>;

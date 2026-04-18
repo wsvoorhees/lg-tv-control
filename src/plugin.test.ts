@@ -39,6 +39,7 @@ vi.mock("@elgato/streamdeck", () => ({
         actions: { registerAction: vi.fn() },
         ui: {
             onSendToPlugin: vi.fn((handler) => { handlers.sendToPlugin = handler; }),
+            onDidAppear: vi.fn(),
             sendToPropertyInspector: mockSendToPropertyInspector,
         },
         connect: vi.fn().mockResolvedValue(undefined),
@@ -79,7 +80,7 @@ describe("startup", () => {
             default: {
                 logger: { setLevel: vi.fn(), debug: vi.fn(), info: vi.fn(), error: vi.fn() },
                 actions: { registerAction: vi.fn() },
-                ui: { onSendToPlugin: vi.fn(), sendToPropertyInspector: vi.fn() },
+                ui: { onSendToPlugin: vi.fn(), onDidAppear: vi.fn(), sendToPropertyInspector: vi.fn() },
                 connect: vi.fn().mockResolvedValue(undefined),
                 settings: {
                     getGlobalSettings: vi.fn().mockResolvedValue({
@@ -121,7 +122,7 @@ describe("startup", () => {
             default: {
                 logger: { setLevel: vi.fn(), debug: vi.fn(), info: vi.fn(), error: vi.fn() },
                 actions: { registerAction: vi.fn() },
-                ui: { onSendToPlugin: vi.fn(), sendToPropertyInspector: vi.fn() },
+                ui: { onSendToPlugin: vi.fn(), onDidAppear: vi.fn(), sendToPropertyInspector: vi.fn() },
                 connect: vi.fn().mockResolvedValue(undefined),
                 settings: {
                     getGlobalSettings: vi.fn().mockResolvedValue({
