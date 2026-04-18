@@ -11,6 +11,7 @@ if (tvSelectorRoot) {
             <div class="tv-config-group-header">
                 <span class="tv-config-group-label">TV Configuration</span>
             </div>
+            <div class="tv-config-group-label" id="form-section-label" style="margin-bottom:6px">Configured TVs:</div>
             <div id="tv-list"><p class="pi-status">Loading...</p></div>
             <hr class="tv-config-separator">
             <div class="tv-config-group-label" id="form-section-label" style="margin-bottom:6px">Add TV</div>
@@ -28,6 +29,7 @@ if (tvSelectorRoot) {
                 <button id="tv-cancel-btn" class="pi-btn" style="display:none; margin-top:4px">Cancel</button>
             </sdpi-item>
             <hr class="tv-config-separator">
+            <div class="tv-config-group-label" id="form-section-label" style="margin-bottom:6px">Scan for TVs</div>
             <sdpi-item label="Found TVs">
                 <sdpi-select id="tv-scan-select">
                     <option value="-1">Scan to find TVs...</option>
