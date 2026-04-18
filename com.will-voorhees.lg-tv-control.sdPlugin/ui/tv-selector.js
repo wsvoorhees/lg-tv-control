@@ -9,7 +9,7 @@ if (tvSelectorRoot) {
     tvSelectorRoot.innerHTML = `
         <div class="tv-config-group">
             <div class="tv-config-group-header">
-                <span class="tv-config-group-label">TV Configuration</span>
+                <span class="tv-config-group-label">TV Connections</span>
             </div>
             <div class="tv-config-group-label" style="margin-bottom:6px">Configured TVs:</div>
             <div id="tv-list"><p class="pi-status">Loading...</p></div>
