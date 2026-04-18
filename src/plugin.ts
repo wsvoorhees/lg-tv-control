@@ -127,10 +127,12 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
 
     if (payload.event === "connectTv") {
         const { id } = payload as { id?: string };
-        const client = id ? tvClientPool.get(id) : undefined;
-        if (!client) return;
+        if (!id) return;
+        const client = tvClientPool.get(id);
+        const config = tvClientPool.getConfigs().find(c => c.id === id);
+        if (!client || !config) return;
         await client.wakeOnLan();
-        client.reconnect();
+        client.connect(config.ip, config.mac);
         return;
     }
 
