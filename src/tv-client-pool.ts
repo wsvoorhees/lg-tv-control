@@ -33,6 +33,14 @@ export class TvClientPool extends EventEmitter {
         }
 
         this._configs = [...tvs];
+
+        // Broadcast current state for all TVs so any handlers registered before
+        // configure() ran (e.g. onWillAppear firing before global settings arrive)
+        // receive an immediate update rather than showing a stale "Off" title.
+        for (const config of this._configs) {
+            const client = this._clients.get(config.id);
+            if (client) this.emit("stateChange", config.id, client.state);
+        }
     }
 
     private _create(config: TvConfig): void {

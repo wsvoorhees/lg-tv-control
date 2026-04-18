@@ -85,6 +85,16 @@ describe("TogglePower", () => {
             expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
         });
 
+        it("updates title when stateChange fires for default TV but action has stale tvId", () => {
+            // TV was deleted and re-added; action settings still hold the old UUID.
+            mockTvClientPool.get.mockImplementation((id: string) => id === "default-id" ? mockTvClient : undefined);
+            const ev = makeWillAppearEvent("action-id", "stale-id");
+            action.onWillAppear(ev as never);
+            // Broadcast fires for "default-id" (the new UUID assigned after re-add).
+            poolStateChangeListeners[0]("default-id", "connected");
+            expect(ev.action.setTitle).toHaveBeenLastCalledWith("On");
+        });
+
         it("updates title when stateChange fires after getDefaultId was undefined at appearance time", () => {
             mockTvClientPool.getDefaultId.mockReturnValue(undefined); // simulate pre-configure startup
             const ev = makeWillAppearEvent();

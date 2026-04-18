@@ -47,8 +47,10 @@ export abstract class StatefulTvAction extends SingletonAction<BaseTvActionSetti
         // even if getDefaultId() was not yet available when the handler was registered
         // (onWillAppear fires before tvClientPool.configure() runs at startup).
         const handler = (changedId: string, state: ConnectionState) => {
-            const targetId = tvId ?? tvClientPool.getDefaultId();
-            if (changedId === targetId) {
+            // Use tvId if it still resolves to a known TV; otherwise fall back to the
+            // default TV (handles stale UUIDs left in settings after a TV is removed/re-added).
+            const effectiveId = (tvId && tvClientPool.get(tvId)) ? tvId : tvClientPool.getDefaultId();
+            if (changedId === effectiveId) {
                 action.setTitle(STATE_LABELS[state]);
             }
         };

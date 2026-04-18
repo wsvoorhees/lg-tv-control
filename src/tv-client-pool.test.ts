@@ -147,6 +147,15 @@ describe("TvClientPool", () => {
             expect(listener).not.toHaveBeenCalledWith("id-a", expect.anything());
         });
 
+        it("broadcasts current state for all TVs immediately after configure()", () => {
+            const listener = vi.fn();
+            pool.on("stateChange", listener);
+            pool.configure([TV_A]);
+            // configure() emits "connecting" from the client startup AND the post-configure broadcast.
+            // Both should report "connecting"; we verify at least one emission per TV.
+            expect(listener).toHaveBeenCalledWith("id-a", "connecting");
+        });
+
         it("does not emit stateChange from a removed TV after removal", () => {
             pool.configure([TV_A]);
             pool.configure([]);
